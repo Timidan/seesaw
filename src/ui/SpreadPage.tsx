@@ -63,7 +63,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
           {pair ? <Xray short={short} long={long} shortApr={shortApr} longApr={longApr} correlation={pair.corr} ps={ks.data} pl={kl.data} /> : <div className="skel" style={{ height: 320 }} />}
 
           <section className="chart-block" aria-labelledby="tapes">
-            <h3 id="tapes">Every hour, who got paid</h3>
+            <h2 className="h-sec" id="tapes">Every hour, who got paid</h2>
             <div className="tapes">
               <div>
                 <p className="tape-title"><b>Short {S}</b></p>
@@ -77,7 +77,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
           </section>
 
           <section className="chart-block" aria-labelledby="fchart">
-            <h3 id="fchart">$1,000 in each leg, 30 days</h3>
+            <h2 className="h-sec" id="fchart">$1,000 in each leg, 30 days</h2>
             {funding ? <FundingChart short={funding.sa} long={funding.sb} total={funding.st} label={`Cumulative funding received, short ${S} and long ${L}`} /> : <div className="skel chart" />}
             <div className="chart-legend">
               <span><i className="swatch" style={{ borderColor: "#fde819" }} /> Both legs {funding && <b className="num" style={{ color: "var(--strike)" }}>{usd(funding.st.at(-1)?.value ?? 0)}</b>}</span>
@@ -87,7 +87,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
           </section>
 
           <section className="chart-block" aria-labelledby="rchart">
-            <h3 id="rchart">{S} priced in {L}</h3>
+            <h2 className="h-sec" id="rchart">{S} priced in {L}</h2>
             {ratio ? <RatioChart points={ratio.ratios} mean={ratio.meanRatio} upper={ratio.upperRatio} lower={ratio.lowerRatio} label={`${S} to ${L} price ratio over 30 days`} /> : <div className="skel chart" />}
             <div className="chart-legend">
               <span><i className="swatch" /> Price ratio</span>
@@ -97,7 +97,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
           </section>
 
           <section className="chart-block calc" aria-labelledby="calc">
-            <h3 id="calc">What it would have paid</h3>
+            <h2 className="h-sec" id="calc">What it would have paid</h2>
             <p className="calc-out"><span className="display num">{perWeek !== null ? usd(perWeek, perWeek < 100 ? 2 : 0) : "…"}</span><span className="calc-unit">a week</span></p>
             <label className="calc-label" htmlFor="calc-n">with <b className="num">{usd(size, 0)}</b> in each leg</label>
             <input id="calc-n" className="range" type="range" min={20} max={20000} step={20} value={size} onChange={(e) => setSize(Number(e.target.value))} />
@@ -105,7 +105,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
           </section>
 
           <section className="risks" aria-labelledby="risks">
-            <h3 id="risks">What can go wrong</h3>
+            <h2 className="h-sec" id="risks">What can go wrong</h2>
             <ul className="risk-list">
               <li>
                 <span className="risk-art">{fs.data ? <FundingTape points={fs.data} side="short" height={22} label={`${S} funding by hour, red hours shorts paid`} /> : null}</span>

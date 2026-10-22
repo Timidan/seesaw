@@ -26,7 +26,7 @@ export function OpenPanel({ short, long }: { short: string; long: string }) {
 
   return (
     <div className="panel open">
-      <h3>Open this spread</h3>
+      <h2 className="h-sec">Open this spread</h2>
       <p className="sub">Both legs go to Strike testnet in one signed request, with Seesaw's builder code.</p>
       {markets === null ? <div className="skel" style={{ height: 120, marginTop: 18 }} />
         : !tradable ? <NotOnTestnet markets={markets} short={short} long={long} />
@@ -146,7 +146,7 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
         </dl>
       )}
       {!ready && <div className="skel" style={{ height: 80, marginTop: 18 }} />}
-      {plan?.warnings.map((w) => <p key={w} className="notice warn"><b>Heads up.</b> {w}</p>)}
+      {plan?.warnings.map((w) => <p key={w} className="notice warn"><b>Note:</b> {w}</p>)}
       {plan?.blockers.map((b) => <p key={b} className="notice err"><b>Can't open yet.</b> {b}</p>)}
       {plan?.blockers.some((b) => /balance|margin|fund/i.test(b)) && (
         <p className="sub" style={{ marginTop: 10 }}>Deposit test funds with this same wallet on the <a className="link" href="https://testnet.strikefinance.org" target="_blank" rel="noreferrer">Strike testnet app</a>; your balance updates here.</p>

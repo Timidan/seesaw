@@ -14,8 +14,11 @@ export function SceneOverlay({ shortLabel, longLabel, crowdLabel }: { shortLabel
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    let raf = 0;
+    let raf = 0, onScreen = true;
+    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; });
+    io.observe(canvas);
     const loop = (now: number) => {
+      if (!onScreen || document.hidden) { raf = requestAnimationFrame(loop); return; }
       const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2);
       if (canvas.width !== Math.round(W * dpr)) { canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -58,7 +61,7 @@ export function SceneOverlay({ shortLabel, longLabel, crowdLabel }: { shortLabel
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); io.disconnect(); };
   }, []);
 
   return (
@@ -76,7 +79,7 @@ export function useHeroDirector(funding: FundingPoint[] | undefined, z: number, 
   const state = useRef({ lastReceived: 0, total: 1, done: false });
 
   useEffect(() => {
-    const wide = () => { scene.active = window.innerWidth >= 900; };
+    const wide = () => { scene.active = window.innerWidth >= 1200; }; // below this the copy needs the room
     wide(); window.addEventListener("resize", wide);
     Object.assign(scene, { tilt: 0.16, drop: 0, squash: 0, charge: 0, sparks: [], dust: [], replayIndex: -1, introDone: false });
     if (reducedMotion()) Object.assign(scene, { tilt: z * 0.012, drop: 1, charge: 1 });
@@ -120,7 +123,7 @@ export function useHeroDirector(funding: FundingPoint[] | undefined, z: number, 
       if (!scene.introDone) return;
       window.clearInterval(poll);
       timer = window.setInterval(() => {
-        if (!scene.active || document.hidden) return;
+        if (!scene.active || document.hidden || scene.paused) return;
         const idx = i % funding.length, p = funding[idx]; i++;
         scene.replayIndex = idx;
         fire(p.rate < 0, Math.min(1, Math.sqrt(Math.abs(p.rate) / 0.0003)));

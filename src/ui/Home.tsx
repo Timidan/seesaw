@@ -7,6 +7,7 @@ import { FundingTape } from "./FundingTape";
 import { Beam, KineticNumber } from "./bits";
 import { SceneOverlay, useHeroDirector } from "./HeroScene";
 import { MiniTape } from "./MiniTape";
+import { scene } from "./scene";
 import { useFunding, useSnapshot } from "./data";
 import { base, corr, pct, z } from "./format";
 
@@ -35,6 +36,10 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
   const replay = useRef<HTMLSpanElement>(null);
   const feed = useHeroDirector(funding.data, hero?.z ?? 0, replay);
   const printed = funding.data ? count.printed >= funding.data.length : false;
+  // The number must never stay hidden: show it if the tape cannot load or takes too long.
+  const [late, setLate] = useState(false);
+  useEffect(() => { if (!hero) return; const t = window.setTimeout(() => setLate(true), 6500); return () => window.clearTimeout(t); }, [hero]);
+  const reveal = printed || late || !!funding.error;
   const hours = funding.data?.length ?? 720;
   const onProgress = useCallback((received: number, printed: number) => {
     setCount({ received, printed });
@@ -58,12 +63,12 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
             </p>
             {hero && (
               <div className="figure">
-                <KineticNumber className="figure-num" value={pct(hero.carryApr)} play={printed} onImpact={() => setLanded(true)} />
+                <KineticNumber className="figure-num" value={pct(hero.carryApr)} play={reveal} onImpact={() => setLanded(true)} />
                 <p className="figure-label"><b>a year, short {short} / long {long}</b>funding over 30 days · moves together {corr(hero.corr)}</p>
               </div>
             )}
             <div className="hero-actions" style={{ opacity: hero ? 1 : 0.4 }}>
-              <a className="btn btn-strike" href={hero ? `#/spread/${hero.short}/${hero.long}` : "#board"} aria-disabled={!hero}>
+              <a className="btn btn-strike" href={hero ? `#/spread/${hero.short}/${hero.long}` : "#board"}>
                 Open this spread <span className="arrow" aria-hidden>→</span>
               </a>
               <a className="link" href="#board">All {total || ""} spreads</a>
@@ -71,6 +76,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
           </div>
         </div>
       </div>
+      <PauseMotion />
       <div className="hero-tape wrap">
         <div className="tape-head">
           <p className="tape-title"><b>{short} funding</b> · one tick per hour</p>
@@ -83,6 +89,15 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
         <div className="tape-axis"><span>30 days ago</span><span ref={replay} className="tape-replay" aria-hidden="true" /><span>{landed && asOf ? `as of ${asOf.slice(0, 16).replace("T", " ")} UTC` : "now"}</span></div>
       </div>
     </section>
+  );
+}
+
+function PauseMotion() {
+  const [paused, setPaused] = useState(false);
+  return (
+    <button type="button" className="pause" aria-pressed={paused} onClick={() => { scene.paused = !paused; setPaused(!paused); }}>
+      {paused ? "Play motion" : "Pause motion"}
+    </button>
   );
 }
 
@@ -118,8 +133,8 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
             <p className="section-sub">Every Strike pair, ranked by the funding it paid in 30 days.</p>
           </div>
           <div className="board-controls" role="group" aria-label="Filters">
-            <button type="button" className="toggle" aria-pressed={hedged} onClick={() => setHedged((v) => !v)}>Moves together</button>
-            <button type="button" className="toggle" aria-pressed={testnet} onClick={() => setTestnet((v) => !v)}>On testnet</button>
+            <button type="button" className="toggle" aria-pressed={hedged} onClick={() => setHedged((v) => !v)}>Only pairs that move together</button>
+            <button type="button" className="toggle" aria-pressed={testnet} onClick={() => setTestnet((v) => !v)}>Only testnet pairs</button>
           </div>
         </div>
         <div className="board-scroll">
@@ -156,7 +171,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={6} className="empty">Nothing matches. Strike's testnet lists only BTC, ETH and SOL; turn off "On testnet" to see every market.</td></tr>
+                <tr><td colSpan={6} className="empty">Nothing matches. Strike's testnet lists only BTC, ETH and SOL; turn off "Only testnet pairs" to see every market.</td></tr>
               )}
             </tbody>
           </table>

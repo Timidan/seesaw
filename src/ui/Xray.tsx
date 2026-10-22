@@ -60,8 +60,8 @@ export function Xray({ short, long, shortApr, longApr, correlation, ps, pl }: {
         {/* price paths that cancel */}
         <path d={line(vs)} className="xray-price" stroke="var(--mark-gold)" />
         <path d={line(vl)} className="xray-price" stroke="var(--fg-2)" strokeDasharray="3 3" />
-        <text x="80" y="312" className="xray-k">{S} and {L} price, 30 days</text>
-        <text x="560" y="312" textAnchor="end" className="xray-k">moved together · {corr(correlation)}</text>
+        <text x="80" y="312" className="xray-k xray-cap">{S} and {L} price, 30 days</text>
+        <text x="560" y="312" textAnchor="end" className="xray-k xray-cap">moved together · {corr(correlation)}</text>
       </svg>
     </figure>
   );

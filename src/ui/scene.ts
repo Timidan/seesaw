@@ -15,6 +15,7 @@ export const scene = {
   active: false,   // scene drawn at all (false on narrow screens behind text)
   replayIndex: -1, // hour being replayed on the tape (-1 = none)
   introDone: false,
+  paused: false,   // user paused motion (WCAG 2.2.2): storm, sparks and replay hold still
 };
 
 /** Scene geometry in CSS pixels for a hero of size w×h (y measured from the top). */
@@ -26,7 +27,7 @@ export function layout(w: number, h: number) {
   const half = Math.min(wide ? w * 0.17 : w * 0.34, 290);
   const thick = Math.max(12, Math.round(half * 0.065));
   const weight = { w: Math.round(half * 0.42), h: Math.round(half * 0.36) };
-  return { cx, pivotY, half, thick, weight, ground, crowd: { x0: wide ? w * 0.5 : 0, x1: w } };
+  return { cx, pivotY, half, thick, weight, ground, crowd: { x0: wide ? w * 0.53 : 0, x1: w } };
 }
 
 /** Where a point on the beam ends up after tilting (CSS px). t: -1 short end .. +1 hedge end; up: px above the beam's top face. */

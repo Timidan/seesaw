@@ -25,6 +25,7 @@ export default function App() {
 
   return (
     <>
+      <a className="skip" href="#content">Skip to content</a>
       <header className="topbar">
         <a className="brand" href="#/" aria-label="Seesaw home"><Mark /><span className="brand-word">Seesaw</span></a>
         <nav className="topnav" aria-label="Main">
@@ -32,10 +33,10 @@ export default function App() {
           <a href="https://docs.strikefinance.org/perpetuals/funding-rates" target="_blank" rel="noreferrer">How Strike funding works</a>
         </nav>
         <div className="topbar-right">
-          <span className="net-chip" title="Orders go to Strike testnet. Rankings use Strike mainnet data."><i /> <span>Orders: Strike testnet</span></span>
+          <span className="net-chip" title="Orders go to Strike testnet. Rankings use Strike mainnet data."><i aria-hidden /> <span className="long">Orders: Strike testnet</span><span className="short">Testnet</span></span>
         </div>
       </header>
-      {route.page === "home" ? <Home /> : <SpreadPage short={route.short} long={route.long} />}
+      <div id="content" tabIndex={-1} style={{ outline: "none" }}>{route.page === "home" ? <Home /> : <SpreadPage short={route.short} long={route.long} />}</div>
       <footer className="foot">
         <div className="wrap foot-grid">
           <div>

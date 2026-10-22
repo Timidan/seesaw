@@ -254,7 +254,12 @@ export function StormField({ src, className = "" }: { src: string; className?: s
       gl!.uniform1f(U.charge, scene.charge);
       gl!.drawArrays(gl!.TRIANGLES, 0, 6);
     }
-    const loop = (now: number) => { if (visible && !document.hidden) draw(now); raf = requestAnimationFrame(loop); };
+    let wasPaused = false;
+    const loop = (now: number) => {
+      if (scene.paused !== wasPaused) { wasPaused = scene.paused; if (wasPaused) video.pause(); else if (mode !== "intro") video.play().catch(() => {}); }
+      if (visible && !document.hidden && !scene.paused) draw(now);
+      raf = requestAnimationFrame(loop);
+    };
     raf = requestAnimationFrame(loop);
 
     return () => {
