@@ -46,7 +46,7 @@ function NotOnTestnet({ markets, short, long }: { markets: ExchangeSymbol[]; sho
   return (
     <>
       <p className="notice" style={{ marginTop: 16 }}>
-        <b>{base(short)}</b> / <b>{base(long)}</b> trades on Strike mainnet. This build sends orders to Strike testnet, where only {markets.map((m) => base(m.symbol)).join(", ") || "a few markets"} have enough buyers and sellers to fill.
+        <b>{base(short)}</b> / <b>{base(long)}</b> trades on Strike mainnet. This build sends orders to Strike testnet, where only {markets.map((m) => base(m.symbol)).join(", ") || "a few markets"} have order books close enough to the market price to open and close a spread.
       </p>
       {alts.length > 0 && (
         <>

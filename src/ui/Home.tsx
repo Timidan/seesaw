@@ -197,7 +197,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={7} className="empty">Nothing matches. Strike's testnet lists only BTC, ETH and SOL; turn off "Only testnet pairs" to see every market.</td></tr>
+                <tr><td colSpan={7} className="empty">Nothing matches. Only a few Strike testnet markets can be opened and closed right now; turn off "Only testnet pairs" to see every market.</td></tr>
               )}
             </tbody>
           </table>

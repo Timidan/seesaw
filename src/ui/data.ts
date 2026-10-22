@@ -65,17 +65,22 @@ export const useLiveFunding = () =>
     return Object.fromEntries(rows.map((r) => [r.symbol, Number(r.fundingRate) * 24 * 365 * 100]));
   });
 
-/** Execution-network markets that can actually fill a small market order: listed AND with bids and asks
- *  worth at least $40 in the top five levels. Testnet lists ADA with an empty book, for example. */
+/** Execution-network markets where a spread can be opened AND closed: listed, with bids and asks worth at
+ *  least $40 in the top five levels, and a best bid and ask within 2% of the mark price. Strike bounds market
+ *  and limit orders around the mark, so a book far from it fills one way and refuses the other (testnet's SOL
+ *  book sat 21% under its mark: buys filled, closes were refused). Testnet lists ADA with an empty book, too. */
 export const useExecMarkets = () =>
   useLoad<ExchangeSymbol[]>("exec-markets", async () => {
     const listed = await getExecutionMarkets();
+    const marks: Record<string, number> = await fetch(`${PRICE_API_URL}/v2/premiumIndex`).then((r) => r.json())
+      .then((rows: { symbol: string; markPrice: string }[]) => Object.fromEntries(rows.map((r) => [r.symbol, Number(r.markPrice)]))).catch(() => ({}));
     const ok = await Promise.all(listed.map(async (m) => {
       try {
         const r = await fetch(`${PRICE_API_URL}/v2/depth?symbol=${m.symbol}&limit=5`);
         const d = await r.json() as { bids?: [string, string][]; asks?: [string, string][] };
         const usd = (rows?: [string, string][]) => (rows ?? []).slice(0, 5).reduce((a, [p, q]) => a + Number(p) * Number(q), 0);
-        return usd(d.bids) >= 40 && usd(d.asks) >= 40;
+        const mark = marks[m.symbol], near = (p?: string) => !!p && mark > 0 && Math.abs(Number(p) / mark - 1) <= 0.02;
+        return usd(d.bids) >= 40 && usd(d.asks) >= 40 && near(d.bids?.[0]?.[0]) && near(d.asks?.[0]?.[0]);
       } catch { return false; }
     }));
     return listed.filter((_, i) => ok[i]);
