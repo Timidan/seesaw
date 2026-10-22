@@ -1,6 +1,7 @@
 /* Adapted for Seesaw from the scroll-world skill's engine: adds `sections[k].html` (trusted,
    page-authored markup shown above the title), stops refetching clips that 404, keeps the copy's
-   vertical centring while it drifts, and exports mountScrollWorld as an ES module.
+   vertical centring while it drifts, makes the first scene's title the page h1, publishes each scene's scroll range as data-start/data-end
+   (the page's film layer reads it), and exports mountScrollWorld as an ES module.
    ============================================================================
    scroll-world — portable scroll-scrubbed camera-flight engine
    ----------------------------------------------------------------------------
@@ -157,7 +158,7 @@ function mountScrollWorld(container, config) {
       `<span class="sw-copy__num">${pad(i + 1)} / ${pad(N)}</span>` +
       (s.eyebrow ? `<span class="sw-copy__eyebrow">${esc(s.eyebrow)}</span>` : '') +
       (s.html ? `<div class="sw-copy__art">${s.html}</div>` : '') +
-      (s.title ? `<h2 class="sw-copy__title">${esc(s.title)}</h2>` : '') +
+      (s.title ? (i === 0 ? `<h1 class="sw-copy__title">${esc(s.title)}</h1>` : `<h2 class="sw-copy__title">${esc(s.title)}</h2>`) : '') +
       (s.body ? `<p class="sw-copy__body">${esc(s.body)}</p>` : '') +
       (s.tags && s.tags.length ? `<ul class="sw-copy__tags">${s.tags.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '') +
       (s.cta ? `<div class="sw-copy__cta">${ctaBtns(s.cta)}</div>` : '');
@@ -188,7 +189,7 @@ function mountScrollWorld(container, config) {
     laidOutW = window.innerWidth;
     stageX = window.innerWidth > 860 ? 4 : 0;
     let off = 0;
-    SEGMENTS.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; });
+    SEGMENTS.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; s.el.dataset.start = s.start; s.el.dataset.end = s.end; });
     totalW = off;
     track.style.height = (totalW * vh + vh) + 'px';   // +1vh so the last flight completes
     read();

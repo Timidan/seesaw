@@ -21,7 +21,7 @@ Seesaw:
 Three pictures do the explaining, so a newcomer doesn't need to read the maths:
 - **The funding tape** in the hero: one tick per real hour of the hero spread's funding, printed on load.
 - **The carry machine**: an interactive 108-part isometric figure. Press the beam to send a price shock; lift the hedge to see why it matters.
-- **The story page** (`/story.html`): a scroll-driven flight through six scenes: the crowd, the rent, the hedge, the storm, the board, and one click.
+- **The story page** (`/story.html`): a scroll-driven flight through six scenes: the crowd, the rent, the hedge, the storm, the board, and one click. The camera is computed in the browser: it eases in toward each scene, then flies through the hero's real storm footage to the next one.
 
 ## Innovation and creativity
 
@@ -82,7 +82,7 @@ npm run build      # typecheck + production build (app and story page)
 
 Configuration is the same as Strike's builder reference app: `VITE_API_URL` and friends choose the network (testnet by default). `.env.production` sets `VITE_BUILDER_CODE=Seesaw` and `VITE_BUILDER_FEE_BPS=5`.
 
-The story page's video clips (`public/story/vid/`) are not in git. Without them the page shows the same scenes as dithered stills, and `prefers-reduced-motion` always gets the stills.
+The story page needs no rendered video: its camera moves are computed from the six stills in `public/story/` and the storm clip. With `prefers-reduced-motion`, the scenes are still and simply cross-fade.
 
 ## Limits, stated plainly
 
@@ -94,4 +94,4 @@ The story page's video clips (`public/story/vid/`) are not in git. Without them 
 
 - Started from Strike's builder reference app (first commit, `c4d9ce8`); its API, WebSocket and engine-maths modules are reused.
 - Storm footage: Mixkit, free licence (`public/footage/SOURCES.md`). Charts: TradingView Lightweight Charts. Market icons and logo: Strike.
-- Fonts: Jersey 15 and Geist (SIL Open Font License). Isometric drawing kit: MIT (`src/iso/LICENSE`). The story page's scroll engine is adapted from the scroll-world skill. The story stills were generated with gpt-image-2; the story clips, when present, are rendered with Kling 3.0 from those stills.
+- Fonts: Jersey 15 and Geist (SIL Open Font License). Isometric drawing kit: MIT (`src/iso/LICENSE`). The story page's scroll engine is adapted from the scroll-world skill. The story stills were generated with gpt-image-2.

@@ -1,16 +1,12 @@
 import "./story.css";
 import { mountScrollWorld } from "./scrub-engine.js";
-import { mountDither } from "./dither";
+import { mountFilm } from "./film";
 import type { Snapshot } from "../carry/snapshot";
 import { base, coinIcon, corr, pct, pickHero } from "../ui/format";
 
 // "How Seesaw works" for someone who has never traded: one camera flight through six scenes.
-// Every number is read from the same snapshot the app uses; the footage itself carries no text.
-const clip = (id: string) => ({
-  still: `/story/${id}.webp`, stillMobile: `/story/${id}-m.webp`,
-  clip: `/story/vid/${id}.mp4`, clipMobile: `/story/vid/${id}-m.mp4`,
-});
-const conns = (suffix: string) => [1, 2, 3, 4, 5].map((i) => `/story/vid/conn${i}${suffix}.mp4`);
+// Every number is read from the same snapshot the app uses; the scenes themselves carry no text.
+const clip = (id: string) => ({ still: `/story/${id}.webp`, stillMobile: `/story/${id}-m.webp` });
 
 async function start(root: HTMLElement) {
   const snap: Snapshot = await fetch("/snapshot.json").then((r) => r.json());
@@ -59,10 +55,14 @@ async function start(root: HTMLElement) {
         body: "Pick a spread and Seesaw sends both orders to Strike together, then tracks your rent and price moves as one number. Strike testnet for now.",
         cta: { primary: { label: "Open the board", href: "/#board" }, secondary: { label: `See ${s} / ${l}`, href: `/#/spread/${hero.short}/${hero.long}` } } },
     ],
-    connectors: conns(""),
-    connectorsMobile: conns("-m"),
   });
-  mountDither(root);
+  // where the camera eases in, per scene (source-image coordinates), and which scene has rain
+  mountFilm(root, {
+    focus: [[0.3, 0.45], [0.36, 0.45], [0.3, 0.36], [0.5, 0.44], [0.46, 0.3], [0.56, 0.5]],
+    focusMobile: [[0.26, 0.5], [0.36, 0.47], [0.32, 0.4], [0.46, 0.42], [0.5, 0.36], [0.52, 0.5]],
+    rainScene: 3,
+    storm: "/footage/storm-47947-720.mp4",
+  });
 }
 
 const root = document.getElementById("world")!;

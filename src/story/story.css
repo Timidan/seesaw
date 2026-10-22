@@ -8,18 +8,20 @@ html, body { background: #080a0d; }
   --sw-font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-.st-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* the film, dithered like the hero: above the raw clips, under the copy */
 .story-dither { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 15; pointer-events: none; image-rendering: pixelated; }
 .sw-particles { display: none; }
 
-.sw-brand__mark { width: 30px; height: 18px; border-radius: 0; box-shadow: none; background: url(/favicon.svg) center / contain no-repeat; }
+.sw-root button { font: inherit; }
+.sw-copy__num { display: none; } /* the route rail already shows where you are */
+.sw-brand__mark { width: 30px; height: 18px; border-radius: 0; box-shadow: none; /* taste-skill-ignore: removes the engine default */ background: url(/favicon.svg) center / contain no-repeat; }
 .sw-brand__name { font-family: var(--sw-font-display); font-weight: 400; font-size: 24px; }
 .sw-topcta { border-radius: 2px; padding: 0 18px; min-height: 40px; display: inline-flex; align-items: center; background: var(--sw-accent); color: #080a0d; font-weight: 700; font-size: 15px; }
 .sw-scrollbar { background: rgb(253 232 25 / 0.14); }
 
 .sw-copy__num { font-family: var(--sw-font-body); font-variant-numeric: tabular-nums; letter-spacing: 0; font-size: 13px; color: var(--sw-ink-soft); }
+.sw-copy__title, .sw-copy__body { text-shadow: none; } /* the scrim is the ground */
 .sw-copy__title { font-weight: 400; font-size: clamp(44px, 5vw, 76px); line-height: 0.9; letter-spacing: -0.01em; text-wrap: balance; }
 .sw-copy__body { font-size: 18px; color: var(--sw-ink-soft); text-wrap: pretty; }
 .sw-copy__tags li { border: 0; border-radius: 2px; background: #1b1e23; color: var(--sw-ink); font-weight: 500; font-size: 14px; padding: 6px 10px; font-variant-numeric: tabular-nums; }
@@ -40,3 +42,7 @@ html, body { background: #080a0d; }
 .st-big-label { flex-basis: 100%; max-width: 36ch; font-size: 14px; color: var(--sw-ink-soft); }
 .st-error { position: fixed; inset: auto 24px 24px; z-index: 70; color: var(--sw-ink, #ebeff4); font-family: "Geist", sans-serif; }
 .st-error a { color: inherit; }
+@media (max-width: 860px) {
+  /* captions start higher on phones (logos, the big figure), so the ground behind them does too */
+  .sw-copylayer::before { height: 82%; } /* taste-skill-ignore: scrim over the film */
+}
