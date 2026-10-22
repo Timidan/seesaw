@@ -1,184 +1,97 @@
-# Strike Builder Reference
+# Seesaw
 
-A standalone React + TypeScript reference app for integrating with Strike Finance via the **Builder Codes API**.
+**Seesaw finds the Strike spreads that funding pays you to hold, then opens both legs in one click.**
 
-Demonstrates the complete integration flow:
-- Builder connect (wallet signature + client-generated Ed25519 API wallet)
-- Deposits (quote -> build-tx -> user signs/submits -> confirm)
-- Withdrawals (quote -> user signs message (+ Cardano funding tx) -> confirm)
-- Order placement (market, limit, strategy with TP/SL) with a per-order builder fee
-- Real-time WebSocket data (order book, mark prices, klines, positions, orders, balance)
-- Trading math mirrored from the Strike engine (uPnL, IM/MM, margin tiers, liquidation price, balances, order margin, fees)
+Live: <https://seesaw.timidan.xyz> · New to trading? Start with the one-minute tour at `/story.html`.
+Built for the Strike Hackathon, October 2026.
 
-## Quick Start
+## What it does
+
+On Strike, the crowd usually leans one way. To keep the perpetual price near the spot price, the crowded side pays the other side **funding** every hour. Over the 30 days in the current snapshot, ADA longs paid ADA shorts in 711 of 720 hours.
+
+Collecting that funding by shorting ADA alone means carrying ADA's price risk. A **spread** fixes most of that: short the crowded coin, and go long a coin that moves with it, sized by the hedge ratio. When the market jumps, both legs move together, and the funding keeps arriving.
+
+Seesaw:
+
+1. **Ranks every Strike pair** as "short A / long B" by the funding it paid over 30 days, per unit of hedged risk (the board on the home page).
+2. **Explains each spread** on its own page: funding history for both legs, the price ratio, a carry calculator, the hedge ratio, how often the spread flipped, how fast it mean-reverts, and the odds of a leg being liquidated.
+3. **Opens both legs in one click** on Strike through a builder code, with isolated margin and leverage set per leg.
+4. **Tracks the spread** as one card: price P&L, funding earned, and close both legs together.
+
+Three pictures do the explaining, so a newcomer doesn't need to read the maths:
+- **The funding tape** in the hero: one tick per real hour of the hero spread's funding, printed on load.
+- **The carry machine**: an interactive 108-part isometric figure. Press the beam to send a price shock; lift the hedge to see why it matters.
+- **The story page** (`/story.html`): a scroll-driven flight through six scenes: the crowd, the rent, the hedge, the storm, the board, and one click.
+
+## Innovation and creativity
+
+- A funding-carry screener for a perps order book, ranked by **carry per unit of risk** after a beta hedge, not by raw funding. Raw funding favours the most volatile pairs; per-risk ranking favours the spreads you can actually hold.
+- "Paying now" (a 72-hour EWMA) next to the 30-day number, so a spread that has stopped paying is visible before you open it.
+- The interface is built from the product's own data: the hero tape, the board's 30-day mini tapes, and the machine's numbers all come from Strike's funding history. Nothing on the page is an invented figure.
+
+## Integration with Strike
+
+| Strike feature | What Seesaw uses it for | Code |
+|---|---|---|
+| Price API: `exchangeInfo`, `klines` (mark, 1 h, 720), `premiumIndex`, `depth` | Market list, hourly returns for beta and volatility, live funding and marks, which testnet markets can actually fill | `src/carry/data.ts`, `src/carry/execMarkets.ts`, `src/ui/data.ts` |
+| Stats API: 30-day funding history | Carry, hours paid, flips, EWMA | `src/carry/data.ts`, `scripts/snapshot.ts` |
+| Builder Connect (request signature → wallet signs → verify) with a client Ed25519 API wallet | One signature to let Seesaw trade for the account; the API wallet cannot withdraw | `src/api/builderConnect.ts`, `src/session/useBuilderConnect.ts` |
+| Builder code `Seesaw` (testnet) and `X-Builder-Fee-Bps: 5` on every order | Builder fee on both legs | `.env.production`, `src/api/config.ts` |
+| Leverage and margin mode per symbol | Isolated margin and the chosen leverage are set and confirmed on both legs before any order | `src/spread/engine.ts` |
+| `/v2/orders/batch` | Both legs in one request | `src/spread/engine.ts` |
+| User WebSocket (order and trade updates) | Per-leg fill state, so the card knows when both legs filled | `src/spread/useSpreads.ts`, `src/ws/` |
+| Public positions, fills and funding by account | A read-only live spread for visitors without a wallet | `src/spread/publicSpread.ts`, `src/ui/LiveSpread.tsx` |
+| Deposits | Funding the account from the ticket when the balance is short | `src/session/useDeposit.ts`, `src/ui/DepositInline.tsx` |
+| Strike's market icons and logo | Every coin and stock icon in the app | `src/ui/Coin.tsx` |
+
+## Utility and impact
+
+- **For traders:** a market-neutral way to earn funding, with the risk on the page in plain numbers: the hedge ratio, hedged versus unhedged swing, how often the spread flipped sign, its mean-reversion half-life, and liquidation odds per leg.
+- **For Strike:** spreads put size on the uncrowded side of one-sided books, which pulls funding back toward balance, and every order carries a builder fee.
+
+## Technical execution
+
+- **Maths** (`src/carry/math.ts`, checked by `npm test`):
+  - hedge beta = cov/var of hourly log returns;
+  - hedged volatility and beta-weighted carry APR;
+  - carry per unit of risk;
+  - 72-hour EWMA of funding;
+  - 7-day sign flips;
+  - Ornstein–Uhlenbeck half-life of the log spread;
+  - first-passage liquidation probability `1 − erf(k / (σ√(2h)))`;
+  - fee break-even days.
+- **Two legs that are not atomic:** the batch returns per-leg results and the user stream reports fills. If one leg is rejected, the card names the leg and offers *retry this leg* or *close the other leg* (`src/spread/engine.ts`, `src/spread/legs.ts`).
+- **Fast first paint without a wallet:** `npm run snapshot` writes `public/snapshot.json` at build time, and the page refreshes live funding on top.
+- **One static site, no backend.** Market data comes from Strike mainnet's public endpoints (CORS `*`); orders go to the network in `VITE_API_URL` (testnet by default).
+
+## Future potential
+
+- Mainnet: builder code registration is free on mainnet (confirmed by Strike); the code path is the same.
+- A public Strike vault that holds the top-ranked spreads and rebalances when "paying now" turns negative.
+- Alerts when a held spread flips sign or its hedge ratio drifts.
+
+## Run it
 
 ```bash
 npm install
-npm run dev
+npm run dev        # http://localhost:5173  (story: /story.html)
+npm test           # carry maths checks
+npm run snapshot   # refresh public/snapshot.json from Strike mainnet
+npm run build      # typecheck + production build (app and story page)
 ```
 
-Open http://localhost:5173
+Configuration is the same as Strike's builder reference app: `VITE_API_URL` and friends choose the network (testnet by default). `.env.production` sets `VITE_BUILDER_CODE=Seesaw` and `VITE_BUILDER_FEE_BPS=5`.
 
-## Configuration
+The story page's video clips (`public/story/vid/`) are not in git. Without them the page shows the same scenes as dithered stills, and `prefers-reduced-motion` always gets the stills.
 
-Defaults point at **testnet** (`api-v2-testnet.strikefinance.org`). For mainnet, create a `.env` file:
+## Limits, stated plainly
 
-```env
-VITE_API_URL=https://api.strikefinance.org
-VITE_PRICE_URL=https://api.strikefinance.org/price
-VITE_PRICE_WS_URL=wss://api.strikefinance.org/ws/price
-VITE_USER_WS_URL=wss://api.strikefinance.org/ws/user-api
-VITE_STATS_URL=https://api.strikefinance.org/stat
-VITE_BUILDER_CODE=your-builder-code
-VITE_BUILDER_FEE_BPS=10
-```
+- Orders go to **Strike testnet**. Testnet lists ADA but its order book is empty, so testnet spreads use BTC, ETH and SOL. At the time of writing those pairs were paying negative carry over the last 72 hours, and the app shows that in red.
+- Past funding is not a forecast. A hedge reduces price risk; it does not remove it.
+- The API wallet's key lives in the browser, as in Strike's reference app. It can place orders but cannot withdraw without the wallet's own signature.
 
-| Variable | Purpose |
-|----------|---------|
-| `VITE_API_URL` | Main API (`/v2/...`, `/auth/...`). Origin only — signatures cover the exact request path. |
-| `VITE_PRICE_URL` | Price service REST (`/price/v2/depth`, `/price/v2/markPrice`, `/price/v2/klines`, ...) |
-| `VITE_PRICE_WS_URL` | Public market-data WebSocket (`/ws/price`) |
-| `VITE_USER_WS_URL` | User WebSocket for API wallets (`/ws/user-api`). `/ws/user` is the Strike app's JWT endpoint. |
-| `VITE_STATS_URL` | Stats service (`/stat/v1/...`, e.g. leaderboard, dashboard) — not used by the UI |
-| `VITE_BUILDER_CODE` | Your registered builder code |
-| `VITE_BUILDER_FEE_BPS` | Builder fee in bps (0–100). Requested as the user's approval cap at connect and sent per order as `X-Builder-Fee-Bps`. |
+## Credits
 
-## Project Structure
-
-```
-src/
-  types/           TypeScript interfaces matching the backend JSON
-  math/            Pure calculation functions (no React dependencies)
-    positionCalculations.ts   uPnL, IM/MM, liquidation/bankruptcy price, margin ratio
-    marginTiers.ts            Tier lookups (by notional / by leverage), MMR, MA, max leverage
-    balanceCalculations.ts    Order margin (TotalOrderCost), available, withdrawable, margin balance
-    fees.ts                   Effective fee rates, commission, builder fee
-    orderBookUtils.ts         Depth diff merge, VWAP market fill estimation, grouping
-    formatUtils.ts            Formatting, step snapping, half-even rounding
-  api/             REST API integration
-    auth.ts                   Ed25519 keypair + API wallet request signing
-    builderConnect.ts         Builder connect flow (2 calls)
-    wallets.ts                Wallet detection, connection and per-chain signing
-    deposit.ts                Deposit flow (quote, build-tx, confirm)
-    withdraw.ts               Withdrawal flow (estimate, quote, confirm)
-    orders.ts                 Orders, strategy (TP/SL), cancel, replace, leverage, margin mode
-    account.ts                Account, symbols, positions, open orders, markets, depth, klines, fees
-  ws/              WebSocket connections
-    priceStream.ts            Public: markPrice, depth, bookTicker, trade, kline, miniTicker
-    userStream.ts             Authenticated (session.logon): ACCOUNT_UPDATE, ORDER_TRADE_UPDATE
-  hooks/           React hooks
-    useMarkets.ts             Fetch market config
-    usePriceStream.ts         Live mark prices + locally maintained order book
-    useUserStream.ts          REST state + live positions, orders, balance
-    usePositions.ts           Enrich positions with derived fields
-    useKlineData.ts           Chart history + live mark-price candles
-    useOrderValidation.ts     Pre-trade checks mirroring engine admission
-  components/      UI components
-```
-
-## API Authentication
-
-Authenticated REST requests use **API wallet headers** (not JWT):
-
-```
-X-API-Wallet-Public-Key: <64 hex chars, Ed25519 public key>
-X-API-Wallet-Signature:  <128 hex chars, Ed25519 signature>
-X-API-Wallet-Timestamp:  <unix seconds; not in the future, at most 3 minutes old>
-X-API-Wallet-Nonce:      <16..128 chars, single use per key, e.g. a UUID>
-X-Builder-Fee-Bps:       <optional, orders only, not signed>
-```
-
-Signature message:
-```
-{METHOD}:{PATH}:{TIMESTAMP}:{NONCE}:{BODY_HASH}
-```
-- `PATH` is the URL path plus `?` + raw query when present (e.g. `/v2/positions?symbol=BTC-USD`).
-- `BODY_HASH` is hex SHA-256 of the raw body bytes; an empty body hashes to
-  `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-- If the client clock drifts, use `GET /v2/time` (`{"serverTime": ms}`) to compute an offset.
-
-The user WebSocket authenticates with `session.logon` instead: sign
-`session.logon:{timestamp_ms}:{apiKey}` (milliseconds; 30 s future .. 3 min past).
-
-See `src/api/auth.ts` and `src/ws/userStream.ts`.
-
-## Key Formulas
-
-All formulas are in `src/math/` and mirror the engine (`pkg/models` in the Strike backend; spec: `docs/CALCULATION_SPECS.md`). Decimals are strings in the API; derived values are rounded half-to-even to the market's `quote_prec`. Margin tiers come from `GET /v2/markets` → `margin_tiers`.
-
-**Position (signed size: + long, − short):**
-```
-notional = mark × |size|
-uPnL     = (mark − entry) × size
-IM       = notional / leverage
-MM       = notional × MMR − MA        (tier: first with notional ≤ max_notional, else last)
-```
-
-**Liquidation Price** (`dir` = +1 long / −1 short; MMR, MA from the position's tier):
-```
-LP = (EP − (W + TU − TM + MA) / size) / (1 − dir × MMR)
-
-Isolated: W = iso_balance, TU = TM = 0
-Cross:    W = wallet − Σ(isolated) iso_balance
-          TU / TM = Σ uPnL / Σ MM of the OTHER cross positions
-LP ≤ 0 means no liquidation price.
-```
-
-**Balances:**
-```
-BaseBalance   = wallet − Σ order cost − Σ(isolated) iso_balance
-Available     = BaseBalance − Σ(cross) IM + Σ(cross) uPnL
-Withdrawable  = max(0, BaseBalance − max(Σ(cross) IM − Σ(cross) uPnL, Σ(cross) MM))
-MarginBalance = wallet − Σ(isolated) iso_balance + Σ(cross) uPnL     (cross margin balance)
-Margin ratio  = MM / MarginBalance of the profile (liquidation at ≥ 100%)
-```
-
-**Order cost** (per symbol, pending/open LIMIT + MARKET orders):
-```
-f = max(bid, ask − 2 × notional)   long or flat
-f = max(ask, bid − 2 × notional)   short
-cost = f / symbolLeverage   (+ opening-fee reserve for isolated symbols)
-```
-
-**Fees and funding:**
-```
-commission  = round(notional × rate, quote_prec)   (rate: fee tier, maker override, discounts)
-builder fee = floor(notional × bps / 10000, 2 decimals)
-funding     = −size × mark × hourlyRate     (hourly at HH:00 UTC; positive rate: longs pay)
-```
-
-## Builder Codes API Flow
-
-### Connect (public, no auth headers)
-1. Generate a fresh Ed25519 keypair client-side
-2. `POST /auth/builder/request-signature` `{address, chain, code, fee_share_bps, public_key, referral_code?}`
-   -> `{nonce, message_to_sign, message, referral_code?}` (unknown fields are rejected; challenge valid 5 min)
-3. User signs `message_to_sign` with their wallet (Cardano: CIP-30 signData over the hex-encoded message)
-4. `POST /auth/builder/verify-signature` `{nonce, wallet_signature}`
-   -> `{account_id, builder_code, fee_share_bps, api_wallet_id, api_wallet_public_key, api_wallet_expired_at, referral, ...}`
-
-### Deposit (API wallet auth)
-1. `POST /v2/deposit/quote` `{blockchain, asset_symbol, asset_amount}` -> `{request_id, quote, signature, deposit_address, confirmations_required}`
-2. `POST /v2/deposit/build-tx` `{request_id, user_address, utxos?}` (utxos required on Cardano)
-   -> `{blockchain, unsigned_tx, format, expires_at?, approval_tx?}` (`evm_tx_params` / `solana_base64` / `cardano_cbor`)
-3. User signs + submits on-chain
-4. `POST /v2/deposit` `{request_id, tx_hash}` -> `{request_id, status: "pending", tx_hash, message}`
-
-### Withdraw (API wallet auth)
-1. Optional: `POST /v2/withdraw/estimate` — price preview, no quote created
-2. `POST /v2/withdraw/quote` `{usd_value, blockchain, asset, wallet_address?, source?, recipient_address?}` (send the signing wallet as `wallet_address`)
-   -> `{withdraw_id, fee, message_to_sign, tx_cbor?, validator_address?, route?, ...}`
-3. User signs `message_to_sign` (already hex for Cardano wallets) and, when present, `tx_cbor` (CIP-30 `signTx`)
-4. `POST /v2/withdraw` `{withdraw_id, wallet_signature, signed_tx_cbor?}` -> 201 `{request_id, status: "pending", sequence_id, message_id}`
-
-### Trade (API wallet auth; async — results arrive on the user stream)
-```
-POST   /v2/order              place order (201, status "pending")
-POST   /v2/order/strategy     primary order + tp_order / sl_order
-POST   /v2/order/replace      cancel + create (ignores X-Builder-Fee-Bps)
-DELETE /v2/order/cancel       cancel by order_id or client_order_id (JSON body)
-DELETE /v2/order/cancel-all   JSON body required ({} or {"symbol"})
-POST   /v2/leverage           {symbol, leverage}
-POST   /v2/marginMode         {symbol, marginMode}
-GET    /v2/symbols            effective margin mode + leverage per market
-```
+- Started from Strike's builder reference app (first commit, `c4d9ce8`); its API, WebSocket and engine-maths modules are reused.
+- Storm footage: Mixkit, free licence (`public/footage/SOURCES.md`). Charts: TradingView Lightweight Charts. Market icons and logo: Strike.
+- Fonts: Jersey 15 and Geist (SIL Open Font License). Isometric drawing kit: MIT (`src/iso/LICENSE`). The story page's scroll engine is adapted from the scroll-world skill. The story stills were generated with gpt-image-2; the story clips, when present, are rendered with Kling 3.0 from those stills.

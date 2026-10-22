@@ -35,7 +35,7 @@ async function start(root: HTMLElement) {
       { id: "crowd", label: "The crowd", ...clip("crowd"), scroll: 1.5, linger: 0.3,
         html: leg(hero.short, "long", "on Strike"),
         title: "Everyone sits on one side.",
-        body: `Far more traders on Strike bet ${s} goes up than down. Too many on one side tips the seesaw.` },
+        body: `On Strike, bets that ${s} goes up outweigh bets that it goes down. Too much weight on one side tips the seesaw.` },
       { id: "rent", label: "The rent", ...clip("rent"),
         title: "So they pay rent.",
         body: `To keep the price fair, the crowded side pays the other side every hour. Those betting ${s} goes up paid in ${paid} of the last ${hours} hours.`,
