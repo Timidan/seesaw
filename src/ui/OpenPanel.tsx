@@ -10,6 +10,7 @@ import type { SpreadSide } from "../spread/plan";
 import type { SpreadRecord } from "../spread/store";
 import { useSpreadsCtx } from "./spreadsContext";
 import { Beam } from "./bits";
+import { DepositInline } from "./DepositInline";
 import { useExecMarks, useSnapshot } from "./data";
 import { base, pct, shortId, usd } from "./format";
 import { reducedMotion, strike } from "./storm";
@@ -148,9 +149,7 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
       {!ready && <div className="skel" style={{ height: 80, marginTop: 18 }} />}
       {plan?.warnings.map((w) => <p key={w} className="notice warn"><b>Note:</b> {w}</p>)}
       {plan?.blockers.map((b) => <p key={b} className="notice err"><b>Can't open yet.</b> {b}</p>)}
-      {plan?.blockers.some((b) => /balance|margin|fund/i.test(b)) && (
-        <p className="sub" style={{ marginTop: 10 }}>Deposit test funds with this same wallet on the <a className="link" href="https://testnet.strikefinance.org" target="_blank" rel="noreferrer">Strike testnet app</a>; your balance updates here.</p>
-      )}
+      {plan?.blockers.some((b) => /balance|margin|fund/i.test(b)) && <DepositInline wallet={conn.wallet} />}
       <button type="button" className="btn btn-strike" disabled={!plan || plan.blockers.length > 0 || busy || (!!active && spreads.status(active).status === "opening")} onClick={submit}>
         {busy ? "Sending both legs…" : `Open short ${base(short)} / long ${base(long)}`}
       </button>

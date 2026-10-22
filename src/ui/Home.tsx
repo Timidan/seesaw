@@ -8,6 +8,7 @@ import { Beam, KineticNumber } from "./bits";
 import { SceneOverlay, useHeroDirector } from "./HeroScene";
 import { MiniTape } from "./MiniTape";
 import { scene } from "./scene";
+import { LiveSpread } from "./LiveSpread";
 import { useFunding, useSnapshot } from "./data";
 import { base, corr, pct, z } from "./format";
 
@@ -24,6 +25,7 @@ export function Home() {
   return (
     <main>
       <Hero hero={hero} total={pairs.filter((p) => p.carryApr > 0).length} asOf={snap.data?.asOf ?? null} error={snap.error} />
+      <LiveSpread />
       <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} bins={bins} />
     </main>
   );
