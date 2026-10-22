@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { fundingStats, makePair, pearson, sizeLeg, spreadStats } from "../src/carry/math";
+import { calculateSpreadPnl } from "../src/spread/pnl";
+import { reduceLeg, spreadStatus, type LegState } from "../src/spread/legs";
+import type { SpreadRecord } from "../src/spread/store";
 
 const prices = (values: number[]) => values.map((close, i) => ({ time: i * 3600000, close }));
 const funding = (rate: number) => Array.from({ length: 600 }, (_, i) => ({ time: i * 3600000, rate }));
@@ -15,4 +18,16 @@ assert.deepEqual(sizeLeg(20, 3, 0.1, 0.1, 10), { size: 6.6 });
 const tooSmall = sizeLeg(2, 3, 0.1, 0.1, 10);
 assert.ok("reason" in tooSmall);
 assert.match(tooSmall.reason, /notional/);
+const leg = (clientId: string): LegState => ({ clientId, status: "pending", requestedSize: 1, filledSize: 1, avgPrice: 100, fee: 1, builderFee: 0.5, closeFilledSize: 0, closeFee: 0, closeBuilderFee: 0 });
+const record: SpreadRecord = { id: "check", short: "A", long: "B", notionalPerLeg: 100, leverage: 2, openedAt: 1000, marginModeConfirmed: { short: true, long: true }, legs: { short: leg("s"), long: leg("l") } };
+const pnl = calculateSpreadPnl(record, { A: 90, B: 110 }, { A: [{ timestamp: 1100, amount: "2" }], B: [{ timestamp: 1100, amount: "-1" }] });
+assert.equal(pnl.total.price, 20);
+assert.equal(pnl.total.funding, 1);
+assert.equal(pnl.total.net, 18);
+const timedOut = reduceLeg({ ...leg("s"), filledSize: 0, sentAt: 1000 }, { type: "tick", at: 11000 });
+assert.equal(timedOut.status, "no_response");
+assert.deepEqual(spreadStatus({ short: timedOut, long: { ...leg("l"), status: "filled" } }), { status: "one_leg", failedLeg: "short" });
+const retry = reduceLeg({ ...leg("s"), filledSize: 0.4, status: "rejected" }, { type: "send", clientId: "s-r1", at: 0 });
+const retryFill = reduceLeg(retry, { type: "trade", event: { c: "s-r1", X: "FILLED", z: "0.6", l: "0.6", L: "100", t: 1, i: 5, n: "0", builder_fee: "0" } as any });
+assert.equal(retryFill.filledSize, 1);
 console.log("Math checks passed");
