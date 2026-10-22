@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { buildDepositTx, confirmDeposit, getDepositQuote, type BuildTxResponse, type DepositConfirmResponse, type DepositQuoteResponse } from "../api/deposit";
 import { getCardanoUtxos, type ConnectedWallet } from "../api/wallets";
+import { sendDepositTransaction } from "./senders";
 
 export type DepositHook = { quote: DepositQuoteResponse | null; transaction: BuildTxResponse | null; confirmation: DepositConfirmResponse | null; status: "idle" | "quoting" | "ready" | "submitting" | "pending"; error: string; prepare: (asset: string, atomicAmount: string) => Promise<void>; submit: (sendTransaction?: (transaction: BuildTxResponse, wallet: ConnectedWallet) => Promise<string>) => Promise<void>; confirm: (txHash: string) => Promise<void> };
 
@@ -28,12 +29,7 @@ export function useDeposit(wallet: ConnectedWallet): DepositHook {
     if (quote && Date.now() >= quote.quote.expiration_at) { setError("Deposit quote expired. Request a new quote."); return; }
     setError(""); setStatus("submitting");
     try {
-      let txHash: string;
-      if (sendTransaction) txHash = await sendTransaction(transaction, wallet);
-      else if (transaction.format === "evm_tx_params") {
-        if (transaction.approval_tx) throw new Error("Token approval is required; pass a wallet sender that waits for approval confirmation.");
-        txHash = await wallet.api.request({ method: "eth_sendTransaction", params: [transaction.unsigned_tx] });
-      } else throw new Error("This wallet needs a chain transaction sender; pass sendTransaction or submit externally, then call confirm(hash).");
+      const txHash = await (sendTransaction ?? sendDepositTransaction)(transaction, wallet);
       await confirm(txHash);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Wallet submission failed"); setStatus("ready"); }
   };

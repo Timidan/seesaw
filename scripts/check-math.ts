@@ -3,6 +3,7 @@ import { fundingStats, makePair, pearson, sizeLeg, spreadStats } from "../src/ca
 import { calculateSpreadPnl } from "../src/spread/pnl";
 import { reduceLeg, spreadStatus, type LegState } from "../src/spread/legs";
 import type { SpreadRecord } from "../src/spread/store";
+import { attachCardanoWitness } from "../src/session/cardanoCbor";
 
 const prices = (values: number[]) => values.map((close, i) => ({ time: i * 3600000, close }));
 const funding = (rate: number) => Array.from({ length: 600 }, (_, i) => ({ time: i * 3600000, rate }));
@@ -30,4 +31,6 @@ assert.deepEqual(spreadStatus({ short: timedOut, long: { ...leg("l"), status: "f
 const retry = reduceLeg({ ...leg("s"), filledSize: 0.4, status: "rejected" }, { type: "send", clientId: "s-r1", at: 0 });
 const retryFill = reduceLeg(retry, { type: "trade", event: { c: "s-r1", X: "FILLED", z: "0.6", l: "0.6", L: "100", t: 1, i: 5, n: "0", builder_fee: "0" } as any });
 assert.equal(retryFill.filledSize, 1);
+assert.equal(attachCardanoWitness("84a0a0f5f6", "a10101"), "84a0a10101f5f6");
+assert.throws(() => attachCardanoWitness("84a0a10102f5f6", "a10101"), /already has witnesses/);
 console.log("Math checks passed");

@@ -34,3 +34,5 @@ export const BUILDER_CODE =
 // - Sent per order as X-Builder-Fee-Bps. Must be ≤ the user's approved cap and
 //   ≤ your builder's registered fee_share_bps (deployment max 100). 0 = no fee.
 export const BUILDER_FEE_BPS = Number(import.meta.env.VITE_BUILDER_FEE_BPS ?? "0");
+
+export const DEMO_ACCOUNT_ID = import.meta.env.VITE_DEMO_ACCOUNT_ID ?? "";
