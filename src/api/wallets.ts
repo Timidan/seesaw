@@ -313,7 +313,7 @@ export async function signSolana(api: any, message: string): Promise<string> {
  *   const wallet = await connectEvm("metamask");
  *   // wallet.address = "0x742d35Cc6634C0532925a3b844Bc9e7595f..."
  */
-export async function connectEvm(walletId: string): Promise<ConnectedWallet> {
+export async function connectEvm(walletId: string, pickAccount = false): Promise<ConnectedWallet> {
   let provider: any;
 
   const eth = (window as any).ethereum;
@@ -341,6 +341,13 @@ export async function connectEvm(walletId: string): Promise<ConnectedWallet> {
       break;
     default:
       provider = eth;
+  }
+
+  // Ask the wallet to show its account picker (EIP-2255) so the user chooses which address to connect,
+  // even when this site is already connected to another one. Wallets without it fall through.
+  if (pickAccount) {
+    try { await provider.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] }); }
+    catch (e: any) { if (e?.code === 4001) throw new Error("Connection cancelled in the wallet."); }
   }
 
   const accounts = await provider.request({ method: "eth_requestAccounts" });
@@ -386,7 +393,8 @@ export async function signEvm(
  */
 export async function connectWallet(
   chain: SupportedChain,
-  walletId: string
+  walletId: string,
+  pickAccount = false
 ): Promise<ConnectedWallet> {
   switch (chain) {
     case "cardano":
@@ -394,7 +402,7 @@ export async function connectWallet(
     case "solana":
       return connectSolana(walletId);
     case "ethereum":
-      return connectEvm(walletId);
+      return connectEvm(walletId, pickAccount);
   }
 }
 
