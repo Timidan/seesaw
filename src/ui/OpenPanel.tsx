@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BUILDER_FEE_BPS } from "../api/config";
-import type { SupportedChain } from "../api/wallets";
+import { detectInstalledWallets, type SupportedChain } from "../api/wallets";
 import type { ExchangeSymbol } from "../carry/data";
 import { getExecutionMarkets, isTradable } from "../carry/execMarkets";
 import { DEFAULT_FEE_RATES } from "../math/fees";
@@ -64,6 +64,12 @@ function NotOnTestnet({ markets, short, long }: { markets: ExchangeSymbol[]; sho
 
 function Connect() {
   const c = useBuilderConnect();
+  // Start on a chain where this browser actually has a wallet.
+  useEffect(() => {
+    const found = detectInstalledWallets().find((w) => w.installed);
+    if (found && found.chain !== c.chain) c.setChain(found.chain);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <>
       <div className="seg" role="group" aria-label="Wallet chain" style={{ marginTop: 18 }}>

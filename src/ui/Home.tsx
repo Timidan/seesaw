@@ -6,8 +6,9 @@ import { StormField } from "./StormField";
 import { FundingTape } from "./FundingTape";
 import { Beam, KineticNumber } from "./bits";
 import { SceneOverlay, useHeroDirector } from "./HeroScene";
+import { MiniTape } from "./MiniTape";
 import { useFunding, useSnapshot } from "./data";
-import { base, corr, pct, plainPct, z } from "./format";
+import { base, corr, pct, z } from "./format";
 
 export const spreadHref = (p: { short: string; long: string }) => `#/spread/${p.short}/${p.long}`;
 
@@ -15,13 +16,14 @@ export function Home() {
   const snap = useSnapshot();
   const pairs = snap.data?.pairs ?? [];
   const hero = useMemo(() => pairs.find((p) => p.corr >= 0.6 && p.carryApr > 0), [pairs]);
+  const bins = useMemo(() => Object.fromEntries(Object.entries(snap.data?.symbols ?? {}).map(([k, v]) => [k, v.bins ?? []])), [snap.data]);
   const [exec, setExec] = useState<ExchangeSymbol[] | null>(null);
   useEffect(() => { getExecutionMarkets().then(setExec, () => setExec([])); }, []);
 
   return (
     <main>
       <Hero hero={hero} total={pairs.filter((p) => p.carryApr > 0).length} asOf={snap.data?.asOf ?? null} error={snap.error} />
-      <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} />
+      <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} bins={bins} />
     </main>
   );
 }
@@ -56,8 +58,8 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
             </p>
             {hero && (
               <div className="figure">
-                <span className="figure-row"><KineticNumber className="figure-num" value={`+${Math.floor(hero.carryApr)}`} play={printed} onImpact={() => setLanded(true)} /><span className="figure-unit">%</span></span>
-                <p className="figure-label"><b>a year, short {short} / long {long}</b>{pct(hero.carryApr)} in funding over 30 days · {corr(hero.corr)} correlation</p>
+                <KineticNumber className="figure-num" value={pct(hero.carryApr)} play={printed} onImpact={() => setLanded(true)} />
+                <p className="figure-label"><b>a year, short {short} / long {long}</b>funding over 30 days · moves together {corr(hero.corr)}</p>
               </div>
             )}
             <div className="hero-actions" style={{ opacity: hero ? 1 : 0.4 }}>
@@ -86,11 +88,11 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
 
 type SortKey = "carryApr" | "corr" | "z" | "pctShortPaid";
 
-function Board({ pairs, exec, loading }: { pairs: Pair[]; exec: ExchangeSymbol[] | null; loading: boolean }) {
+function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSymbol[] | null; loading: boolean; bins: Record<string, number[]> }) {
   const [hedged, setHedged] = useState(true);
   const [testnet, setTestnet] = useState(false);
   const [sort, setSort] = useState<SortKey>("carryApr");
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(16);
   const tradable = (p: Pair) => !!exec && isTradable(p.short, p.long, exec);
   const rows = useMemo(() => {
     let r = pairs.filter((p) => p.carryApr > 0);
@@ -112,12 +114,12 @@ function Board({ pairs, exec, loading }: { pairs: Pair[]; exec: ExchangeSymbol[]
       <div className="wrap">
         <div className="section-head">
           <div>
-            <h2 id="board-title">Every Strike spread, ranked by the funding it paid</h2>
-            <p className="section-sub">Short the leg the crowd is long, hold a correlated leg the other way, and the funding gap is yours. Figures are 30-day averages from Strike mainnet; past funding is not a forecast.</p>
+            <h2 id="board-title" className="display">The board</h2>
+            <p className="section-sub">Every Strike pair, ranked by the funding it paid in 30 days.</p>
           </div>
           <div className="board-controls" role="group" aria-label="Filters">
-            <button type="button" className="toggle" aria-pressed={hedged} onClick={() => setHedged((v) => !v)}>Correlation 0.6 or higher</button>
-            <button type="button" className="toggle" aria-pressed={testnet} onClick={() => setTestnet((v) => !v)}>Tradable on testnet</button>
+            <button type="button" className="toggle" aria-pressed={hedged} onClick={() => setHedged((v) => !v)}>Moves together</button>
+            <button type="button" className="toggle" aria-pressed={testnet} onClick={() => setTestnet((v) => !v)}>On testnet</button>
           </div>
         </div>
         <div className="board-scroll">
@@ -125,17 +127,16 @@ function Board({ pairs, exec, loading }: { pairs: Pair[]; exec: ExchangeSymbol[]
             <thead>
               <tr>
                 <th scope="col">Spread</th>
-                {head("carryApr", "Funding a year")}
-                {head("pctShortPaid", "Hours short leg was paid", "hide-sm")}
-                {head("corr", "Correlation")}
-                <th className="hide-sm" scope="col">Spread swing</th>
-                {head("z", "Stretch now", "hide-sm")}
+                <th scope="col" className="hide-sm">30 days, net funding</th>
+                {head("carryApr", "A year")}
+                {head("corr", "Moves together")}
+                {head("z", "Stretch", "hide-sm")}
                 <th scope="col"><span className="sr-only">Execution</span></th>
               </tr>
             </thead>
             <tbody>
               {loading && Array.from({ length: 8 }, (_, i) => (
-                <tr key={i} aria-hidden="true"><td colSpan={7}><div className="skel" style={{ height: 18, width: `${70 - i * 4}%` }} /></td></tr>
+                <tr key={i} aria-hidden="true"><td colSpan={6}><div className="skel" style={{ height: 18, width: `${70 - i * 4}%` }} /></td></tr>
               ))}
               {rows.slice(0, limit).map((p) => (
                 <tr key={`${p.short}/${p.long}`} onClick={() => (location.hash = spreadHref(p).slice(1))}>
@@ -145,25 +146,23 @@ function Board({ pairs, exec, loading }: { pairs: Pair[]; exec: ExchangeSymbol[]
                       <span className="pair-name"><span className="legword">short</span> {base(p.short)} <span className="legword">/ long</span> {base(p.long)}</span>
                     </a>
                   </td>
+                  <td className="hide-sm">{bins[p.short] && bins[p.long]
+                    ? <MiniTape shortBins={bins[p.short]} longBins={bins[p.long]} label={`Net funding for short ${base(p.short)} / long ${base(p.long)}, 30 days`} />
+                    : null}</td>
                   <td><span className="carry">{pct(p.carryApr)}</span></td>
-                  <td className="hide-sm">
-                    <span className="paidbar"><span className="num">{plainPct(p.pctShortPaid * 100)}</span>
-                      <span className="paidbar-track" aria-hidden><span className="paidbar-fill" style={{ width: `${p.pctShortPaid * 100}%` }} /></span></span>
-                  </td>
-                  <td>{corr(p.corr)}</td>
-                  <td className="hide-sm">{p.spreadSd.toFixed(1)}%</td>
+                  <td><span className="corrbar"><span className="num">{corr(p.corr)}</span><span className="paidbar-track" aria-hidden><span className="paidbar-fill" style={{ width: `${Math.max(0, p.corr) * 100}%`, background: "var(--fg-3)" }} /></span></span></td>
                   <td className="hide-sm">{z(p.z)}</td>
                   <td>{tradable(p) ? <span className="tag"><i />testnet</span> : <span className="muted mono">mainnet</span>}</td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={7} className="empty">No spread passes these filters. Turn off "Tradable on testnet" to see mainnet spreads; Strike's testnet lists only BTC, ETH and SOL.</td></tr>
+                <tr><td colSpan={6} className="empty">Nothing matches. Strike's testnet lists only BTC, ETH and SOL; turn off "On testnet" to see every market.</td></tr>
               )}
             </tbody>
           </table>
         </div>
         <div className="board-more">
-          <span>{rows.length} spreads · ranked from {pairs.length} Strike market pairs</span>
+          <span className="mono">{rows.length} of {pairs.length} pairs</span>
           {rows.length > limit && <button type="button" className="btn btn-line btn-sm" onClick={() => setLimit(rows.length)}>Show all {rows.length}</button>}
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { reducedMotion, strike } from "./storm";
 
-/** Big number that lands like a strike: dots swell from hairline to full weight, overshoot, settle. */
+/** Big number that lands like a strike: falls in wide and blurred, slams tight, overshoots, settles. */
 export function KineticNumber({ value, play, onImpact, className = "" }: { value: string; play: boolean; onImpact?: () => void; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const done = useRef(false);
@@ -12,10 +12,10 @@ export function KineticNumber({ value, play, onImpact, className = "" }: { value
     if (reducedMotion()) { onImpact?.(); return; }
     el.animate(
       [
-        { opacity: 0, transform: "translateY(-0.12em) scale(1.14)", fontWeight: 100 },
-        { opacity: 1, offset: 0.55, transform: "translateY(0.03em) scale(0.96)", fontWeight: 900 },
-        { opacity: 1, offset: 0.8, transform: "translateY(-0.01em) scale(1.015)", fontWeight: 900 },
-        { opacity: 1, transform: "none", fontWeight: 900 },
+        { opacity: 0, transform: "translateY(-0.14em) scale(1.3)", filter: "blur(10px)", letterSpacing: "0.12em" },
+        { opacity: 1, offset: 0.55, transform: "translateY(0.03em) scale(0.95)", filter: "blur(0px)", letterSpacing: "-0.02em" },
+        { opacity: 1, offset: 0.8, transform: "translateY(-0.01em) scale(1.015)", filter: "blur(0px)", letterSpacing: "0em" },
+        { opacity: 1, transform: "none", filter: "blur(0px)", letterSpacing: "0em" },
       ],
       { duration: 760, easing: "cubic-bezier(0.7, 0, 0.84, 0)", fill: "both" },
     );

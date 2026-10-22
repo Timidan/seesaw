@@ -16,6 +16,11 @@ for (const symbol of symbols) {
     pctPositive: stats.pctPositive,
     currentFundingApr: (current.get(symbol) ?? 0) * 24 * 365 * 100,
     hours: stats.hours,
+    // 120 bins of 6 hours: mean hourly funding rate, oldest first (board mini tapes)
+    bins: Array.from({ length: 120 }, (_, b) => {
+      const rows = histories[symbol].funding.slice(-720).slice(b * 6, b * 6 + 6);
+      return rows.length ? Number((rows.reduce((a, r) => a + r.rate, 0) / rows.length).toPrecision(4)) : 0;
+    }),
   };
 }
 for (let i = 0; i < symbols.length; i++) {

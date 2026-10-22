@@ -40,7 +40,7 @@ export default function App() {
         <div className="wrap foot-grid">
           <div>
             <p>Seesaw ranks Strike market pairs by the funding each leg paid over the last 30 days (Strike mainnet public data, hourly), and opens both legs through Strike's builder codes. Past funding is not a forecast. Two orders are sent together but fill separately.</p>
-            <p>Built for the Strike Hackathon, October 2026. Storm footage: Mixkit free licence.</p>
+            <p>Built for the Strike Hackathon, October 2026. Storm footage: Mixkit free licence. Charts: <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView Lightweight Charts™</a>.</p>
           </div>
           <div>
             <p><a href="https://strikefinance.org" target="_blank" rel="noreferrer">Strike Finance</a> · <a href="https://docs.strikefinance.org/api/builder-codes" target="_blank" rel="noreferrer">Builder codes</a> · <a href="https://testnet.strikefinance.org" target="_blank" rel="noreferrer">Strike testnet app</a></p>
