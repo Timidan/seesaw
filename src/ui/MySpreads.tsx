@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "../session/SessionProvider";
 import type { SpreadRecord } from "../spread/store";
+import type { SpreadSide } from "../spread/plan";
 import { useSpreadsCtx } from "./spreadsContext";
 import { LegBoard } from "./OpenPanel";
 import { useExecMarks } from "./data";
@@ -23,6 +24,12 @@ export function MySpreads() {
   );
 }
 
+// Strike's reason codes, in words a user can act on.
+const REASONS: Record<string, string> = {
+  market_order_exceeded_slippage: "Strike's price guard stopped it: the order book is too far from the mark price for a market order to fill.",
+};
+const plainReason = (code?: string) => (code && REASONS[code]) || (code ? `Strike said: ${code.replace(/_/g, " ")}.` : "Strike did not fill it.");
+
 function SpreadCard({ record }: { record: SpreadRecord }) {
   const spreads = useSpreadsCtx();
   const marks = useExecMarks([record.short, record.long]);
@@ -31,6 +38,9 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
   const [closing, setClosing] = useState(false);
   const { status } = spreads.status(record);
   const live = status === "open" || status === "one_leg";
+  // a close that Strike refused leaves that leg open: say so, and offer to try again
+  const stuck = (["short", "long"] as SpreadSide[]).filter((s) => { const l = record.legs[s]; return !!l.closeOrderId && l.status === "filled" && !!l.reason; });
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (!(marks[record.short] > 0 && marks[record.long] > 0)) return;
@@ -45,7 +55,7 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
     <article className="panel" style={{ padding: 18 }}>
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
         <h3 style={{ fontSize: 18, fontWeight: 800 }}>short {base(record.short)} / long {base(record.long)}</h3>
-        <span className="muted">{status.replace("_", " ")}</span>
+        <span className="muted">{stuck.length ? "close stopped" : status.replace("_", " ")}</span>
       </header>
       <p className="sub" style={{ color: "var(--fg-3)", fontSize: 13 }}>${record.notionalPerLeg} each leg · {record.leverage}× · opened {new Date(record.openedAt).toUTCString().slice(5, 22)} UTC</p>
       {pnl && (
@@ -58,6 +68,17 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
       )}
       {!pnl && pnlError && <p className="notice">P&amp;L is not available yet: {pnlError}</p>}
       <LegBoard record={record} />
+      {stuck.map((s) => (
+        <div key={s} className="notice err" role="alert">
+          <b>The {base(record[s])} close did not go through.</b> {plainReason(record.legs[s].reason)} Your {base(record[s])} position is still open.
+          <div style={{ marginTop: 10 }}>
+            <button type="button" className="btn btn-line btn-sm" disabled={retrying}
+              onClick={async () => { setRetrying(true); try { await spreads.closeLeg(record.id, s); } finally { setRetrying(false); } }}>
+              {retrying ? `Closing ${base(record[s])}…` : `Try closing ${base(record[s])} again`}
+            </button>
+          </div>
+        </div>
+      ))}
       {live && (
         <button type="button" className="btn btn-line" style={{ width: "100%", marginTop: 14 }} disabled={closing}
           onClick={async () => { setClosing(true); try { await spreads.close(record.id); } finally { setClosing(false); } }}>
