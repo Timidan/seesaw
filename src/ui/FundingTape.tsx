@@ -77,12 +77,13 @@ export function FundingTape({ points, side, height = 96, print = false, onProgre
         const upto = Math.floor(head);
         let burst = 0;
         for (; counted < upto; counted++) if (vals[counted] > 0) { received++; burst += Math.sqrt(vals[counted] / max); }
-        if (flashes && burst > 0 && now - lastFlash > 110) { strike(Math.min(1, 0.25 + burst * 0.18)); lastFlash = now; }
+        // a couple of soft cloud flickers while printing, not a strobe; the big strike waits for the number
+        if (flashes && burst > 0 && now - lastFlash > 900 + Math.random() * 600) { strike(0.3 + Math.random() * 0.15); lastFlash = now; }
         headRef.current = head;
         onProgress?.(received, upto);
         draw(head, null);
         if (k < 1) raf = requestAnimationFrame(tick);
-        else { headRef.current = vals.length; draw(vals.length, null); if (flashes) strike(1.25); onProgress?.(received, vals.length); }
+        else { headRef.current = vals.length; draw(vals.length, null); onProgress?.(received, vals.length); }
       };
       raf = requestAnimationFrame(tick);
     } else {

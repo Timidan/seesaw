@@ -11,6 +11,7 @@ import type { SpreadRecord } from "../spread/store";
 import { useSpreadsCtx } from "./spreadsContext";
 import { Beam } from "./bits";
 import { DepositInline } from "./DepositInline";
+import { Coin } from "./Coin";
 import { useExecMarkets, useExecMarks, useSnapshot } from "./data";
 import { base, pct, shortId, usd } from "./format";
 import { reducedMotion, strike } from "./storm";
@@ -154,7 +155,7 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
         <dl className="kv">
           {(["short", "long"] as SpreadSide[]).map((s) => {
             const leg = plan.legs[s];
-            return <div key={s}><dt>{s === "short" ? "Sell" : "Buy"} {base(s === "short" ? short : long)} <span className="muted">({usd(leg?.notional ?? 0, 0)})</span></dt><dd>{leg ? `${leg.size} · liq ${leg.liquidationPrice > 0 ? usd(leg.liquidationPrice, leg.liquidationPrice < 10 ? 4 : 2) : "none"}${leg.liqProb30d != null ? ` · ${(leg.liqProb30d * 100).toFixed(leg.liqProb30d < 0.1 ? 1 : 0)}% in 30 d` : ""}` : "…"}</dd></div>;
+            return <div key={s}><dt><Coin sym={s === "short" ? short : long} size={16} /> {s === "short" ? "Sell" : "Buy"} {base(s === "short" ? short : long)} <span className="muted">({usd(leg?.notional ?? 0, 0)})</span></dt><dd>{leg ? `${leg.size} · liq ${leg.liquidationPrice > 0 ? usd(leg.liquidationPrice, leg.liquidationPrice < 10 ? 4 : 2) : "none"}${leg.liqProb30d != null ? ` · ${(leg.liqProb30d * 100).toFixed(leg.liqProb30d < 0.1 ? 1 : 0)}% in 30 d` : ""}` : "…"}</dd></div>;
           })}
           <div><dt>Margin needed</dt><dd>{usd(plan.requiredMargin)}</dd></div>
           <div><dt>Fees: Strike + Seesaw ({builderFeeBps} bps)</dt><dd>{usd(plan.estimatedTakerFees)} + {usd(plan.estimatedBuilderFees)}</dd></div>
@@ -198,7 +199,7 @@ export function LegBoard({ record }: { record: SpreadRecord }) {
             <div key={s} className="leg-row" data-state={leg.status}>
               <span className="leg-dot" aria-hidden />
               <span>
-                <span className="what">{s === "short" ? "Sell" : "Buy"} {base(s === "short" ? record.short : record.long)}</span>
+                <span className="what"><Coin sym={s === "short" ? record.short : record.long} size={16} /> {s === "short" ? "Sell" : "Buy"} {base(s === "short" ? record.short : record.long)}</span>
                 <span className="meta" style={{ display: "block" }}>{leg.orderId ? `order ${shortId(leg.orderId)}` : shortId(leg.clientId)}{leg.avgPrice > 0 ? ` · ${leg.filledSize} @ ${leg.avgPrice}` : ""}</span>
               </span>
               <span className="state">{word[leg.status] ?? leg.status}</span>

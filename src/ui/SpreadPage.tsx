@@ -6,6 +6,7 @@ import { OpenPanel } from "./OpenPanel";
 import { MySpreads } from "./MySpreads";
 import { Xray } from "./Xray";
 import { Beam } from "./bits";
+import { Coin } from "./Coin";
 import { useFunding, useKlines, useLiveFunding, useSnapshot } from "./data";
 import { base, corr, pct, usd, z } from "./format";
 
@@ -51,7 +52,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
     <main className="wrap spread-top">
       <p className="crumb"><a href="#board">← The board</a></p>
       <h1 className="spread-title">
-        <span className="verb">short </span>{S}<span className="verb"> / long </span>{L}
+        <span className="verb">short </span><Coin sym={short} size={58} className="title-coin" />{S}<span className="verb"> / long </span><Coin sym={long} size={58} className="title-coin" />{L}
       </h1>
       {flipped && <p className="notice warn" style={{ maxWidth: 640 }}><b>Reversed.</b> Funding favoured the other way. <a className="link" href={`#/spread/${long}/${short}`}>Short {L} / long {S}</a></p>}
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Home } from "./ui/Home";
 import { SpreadPage } from "./ui/SpreadPage";
 import { Mark } from "./ui/bits";
+import { StrikeMark } from "./ui/Coin";
 
 type Route = { page: "home" } | { page: "spread"; short: string; long: string };
 
@@ -33,6 +34,7 @@ export default function App() {
           <a href="https://docs.strikefinance.org/perpetuals/funding-rates" target="_blank" rel="noreferrer">How Strike funding works</a>
         </nav>
         <div className="topbar-right">
+          <a className="built-on" href="https://strikefinance.org" target="_blank" rel="noreferrer"><span>Built on</span> <StrikeMark height={14} /></a>
           <span className="net-chip" title="Orders go to Strike testnet. Rankings use Strike mainnet data."><i aria-hidden /> <span className="long">Orders: Strike testnet</span><span className="short">Testnet</span></span>
         </div>
       </header>
@@ -44,6 +46,7 @@ export default function App() {
             <p>Built for the Strike Hackathon, October 2026. Storm footage: Mixkit free licence. Charts: <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView Lightweight Charts™</a>.</p>
           </div>
           <div>
+            <p className="foot-strike"><a href="https://strikefinance.org" target="_blank" rel="noreferrer"><StrikeMark height={18} /></a></p>
             <p><a href="https://strikefinance.org" target="_blank" rel="noreferrer">Strike Finance</a> · <a href="https://docs.strikefinance.org/api/builder-codes" target="_blank" rel="noreferrer">Builder codes</a> · <a href="https://testnet.strikefinance.org" target="_blank" rel="noreferrer">Strike testnet app</a></p>
           </div>
         </div>

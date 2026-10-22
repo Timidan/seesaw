@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { reducedMotion, strike } from "./storm";
+import { lightning, reducedMotion } from "./storm";
 
 /** Big number that lands like a strike: falls in wide and blurred, slams tight, overshoots, settles. */
 export function KineticNumber({ value, play, onImpact, className = "" }: { value: string; play: boolean; onImpact?: () => void; className?: string }) {
@@ -19,7 +19,7 @@ export function KineticNumber({ value, play, onImpact, className = "" }: { value
       ],
       { duration: 760, easing: "cubic-bezier(0.7, 0, 0.84, 0)", fill: "both" },
     );
-    const t = window.setTimeout(() => { strike(1.1); onImpact?.(); }, 760 * 0.55);
+    const t = window.setTimeout(() => { lightning(1.15); onImpact?.(); }, 760 * 0.55);
     return () => window.clearTimeout(t);
   }, [play, onImpact]);
   return <span ref={ref} className={className} style={play || reducedMotion() ? undefined : { opacity: 0 }}>{value}</span>;

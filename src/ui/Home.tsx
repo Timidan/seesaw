@@ -7,6 +7,7 @@ import { FundingTape } from "./FundingTape";
 import { Beam, KineticNumber } from "./bits";
 import { SceneOverlay, useHeroDirector } from "./HeroScene";
 import { MiniTape } from "./MiniTape";
+import { Coin, Leg } from "./Coin";
 import { scene } from "./scene";
 import { LiveSpread } from "./LiveSpread";
 import { useExecMarkets, useFunding, useSnapshot } from "./data";
@@ -38,7 +39,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
   const [count, setCount] = useState({ received: 0, printed: 0 });
   const [landed, setLanded] = useState(false);
   const replay = useRef<HTMLSpanElement>(null);
-  const feed = useHeroDirector(funding.data, hero?.z ?? 0, replay);
+  const feed = useHeroDirector(funding.data, hero?.z ?? 0, replay, hero?.corr ?? 0.8);
   const printed = funding.data ? count.printed >= funding.data.length : false;
   // The number must never stay hidden: show it if the tape cannot load or takes too long.
   const [late, setLate] = useState(false);
@@ -55,7 +56,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-field"><StormField src="/footage/storm-47947-720.mp4" /></div>
       <div className="hero-scrim" />
-      <SceneOverlay shortLabel={`short ${short} · collects`} longLabel={`long ${long} · hedge`} crowdLabel={`${short} longs pay every hour`} />
+      <SceneOverlay shortLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={16} /> short {short} · collects</>} longLabel={<><Coin sym={hero?.long ?? "SOL-USD"} size={16} /> long {long} · hedge</>} crowdLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={14} /> {short} longs pay every hour</>} shortSym={short} />
       <div className="hero-body">
         <div className="wrap">
           <div className="hero-copy">
@@ -163,7 +164,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                   <td>
                     <a className="pair" href={spreadHref(p)} onClick={(e) => e.stopPropagation()} style={{ textDecoration: "none" }}>
                       <Beam z={p.z} title={`Stretch ${z(p.z)}`} />
-                      <span className="pair-name"><span className="legword">short</span> {base(p.short)} <span className="legword">/ long</span> {base(p.long)}</span>
+                      <span className="pair-name"><Leg sym={p.short} side="short" /><span className="pair-sep" aria-hidden>/</span><Leg sym={p.long} side="long" /></span>
                     </a>
                   </td>
                   <td className="hide-sm">{bins[p.short] && bins[p.long]

@@ -1,6 +1,7 @@
 import { API_BASE_URL, DEMO_ACCOUNT_ID } from "../api/config";
 import { usePublicSpread } from "../spread/usePublicSpread";
 import { Beam } from "./bits";
+import { Coin } from "./Coin";
 import { base, shortId, signedUsd, usd } from "./format";
 
 /** A real spread on Strike testnet, read from public endpoints. Proof for visitors without a wallet. */
@@ -32,7 +33,7 @@ export function LiveSpread() {
               {legs.map((l) => (
                 <div key={l.symbol} className="live-leg">
                   <span className={`live-side ${l.side}`}>{l.side}</span>
-                  <span className="live-sym display">{base(l.symbol)}</span>
+                  <span className="live-sym display"><Coin sym={l.symbol} size={30} /> {base(l.symbol)}</span>
                   <span className="num">{l.size} @ {l.entryPrice}</span>
                   <span className="num muted">now {l.markPrice}</span>
                   <span className="num" style={tone(l.unrealizedPnl)}>{signedUsd(l.unrealizedPnl)}</span>

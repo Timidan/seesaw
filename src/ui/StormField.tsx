@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { onCue, onStrike, reducedMotion } from "./storm";
+import { lightning, onCue, onStrike, reducedMotion } from "./storm";
 import { layout, scene } from "./scene";
 
 // One dithered world: real storm footage behind a lit beam, fulcrum, weights and crowd.
@@ -182,10 +182,20 @@ export function StormField({ src, className = "" }: { src: string; className?: s
 
     // Footage director (clip 47947): black until 0.8 s, flicker 1.0-1.8 s, bright cloud 2.2-2.7 s, bolt 2.8-3.0 s.
     // Intro starts on the tape's "print-start" cue so the real bolt lands with the number slam.
-    const AMBIENT: [number, number] = [1.95, 2.7], BOLT: [number, number] = [2.72, 3.25];
+    // Between flashes the sky holds one dim cloud frame (DIM); a natural storm is mostly dark.
+    const DIM = 2.0, BOLT: [number, number] = [2.72, 3.25];
     let mode: "intro" | "ambient" | "bolt" = "intro";
     let ready = false, cued = false;
-    const toAmbient = () => { mode = "ambient"; video.playbackRate = 0.35; video.currentTime = AMBIENT[0]; video.play().catch(() => {}); };
+    const toAmbient = () => { mode = "ambient"; video.pause(); video.playbackRate = 1; video.currentTime = DIM; };
+    // Ambient storm: a flash every 6-20 s at irregular intervals, never on a beat.
+    let stormTimer = 0;
+    const nextFlash = () => {
+      stormTimer = window.setTimeout(() => {
+        if (mode === "ambient" && visible && !document.hidden && !scene.paused) lightning(Math.random() < 0.45 ? 1.1 : 0.55 + Math.random() * 0.35);
+        nextFlash();
+      }, 6000 + Math.random() * 14000);
+    };
+    if (!reduced) nextFlash();
     const startIntro = () => { if (mode === "intro") video.play().catch(() => {}); };
     const offCue = onCue((name) => { if (name === "print-start") { cued = true; if (ready) startIntro(); } });
     const fallback = window.setTimeout(() => { if (!cued && mode === "intro") toAmbient(); }, 7000);
@@ -197,10 +207,9 @@ export function StormField({ src, className = "" }: { src: string; className?: s
     }, { once: true });
     video.addEventListener("timeupdate", () => {
       if (mode === "intro" && video.currentTime > 3.4) toAmbient();
-      else if (mode === "ambient" && video.currentTime > AMBIENT[1]) video.currentTime = AMBIENT[0];
       else if (mode === "bolt" && video.currentTime > BOLT[1]) toAmbient();
     });
-    const onVis = () => { if (!document.hidden && !reduced && mode !== "intro") video.play().catch(() => {}); };
+    const onVis = () => { if (!document.hidden && !reduced && mode === "bolt") video.play().catch(() => {}); };
     document.addEventListener("visibilitychange", onVis);
 
     let flash = 0;
@@ -224,13 +233,13 @@ export function StormField({ src, className = "" }: { src: string; className?: s
     const ro = new ResizeObserver(resize); ro.observe(canvas); resize();
 
     let visible = true;
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (!reduced && mode !== "intro") visible ? video.play().catch(() => {}) : video.pause(); });
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (!visible && mode !== "intro") video.pause(); });
     io.observe(canvas);
 
     let raf = 0, last = performance.now();
     function draw(now: number) {
       const dt = Math.min(0.1, (now - last) / 1000); last = now;
-      flash *= Math.exp(-dt * 7.5); // fast decay: a strike, not a glow
+      flash *= Math.exp(-dt * 9); // a return stroke is brief; the restrikes carry the flicker
       if (ready && video.readyState >= 2) {
         gl!.bindTexture(gl!.TEXTURE_2D, tex);
         gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA, gl!.RGBA, gl!.UNSIGNED_BYTE, video);
@@ -256,14 +265,14 @@ export function StormField({ src, className = "" }: { src: string; className?: s
     }
     let wasPaused = false;
     const loop = (now: number) => {
-      if (scene.paused !== wasPaused) { wasPaused = scene.paused; if (wasPaused) video.pause(); else if (mode !== "intro") video.play().catch(() => {}); }
+      if (scene.paused !== wasPaused) { wasPaused = scene.paused; if (wasPaused) video.pause(); else if (mode === "bolt") video.play().catch(() => {}); }
       if (visible && !document.hidden && !scene.paused) draw(now);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
     return () => {
-      cancelAnimationFrame(raf); off(); offCue(); window.clearTimeout(fallback); ro.disconnect(); io.disconnect();
+      cancelAnimationFrame(raf); off(); offCue(); window.clearTimeout(fallback); window.clearTimeout(stormTimer); ro.disconnect(); io.disconnect();
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("pointermove", onMove);
       video.pause(); video.removeAttribute("src"); video.load(); video.remove();

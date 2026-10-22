@@ -54,10 +54,12 @@ export function Xray({ short, long, shortApr, longApr, correlation, beta, ps, pl
         {/* beam, weights, pivot */}
         <rect x="80" y="196" width="480" height="10" className="xray-beam" />
         <rect x="112" y="150" width="76" height="46" className="xray-w hot" />
+        <image href={`https://app.strikefinance.org/images/${S.toLowerCase()}.webp`} x="117" y="155" width="18" height="18" />
+        <image href={`https://app.strikefinance.org/images/${L.toLowerCase()}.webp`} x={490 - hw / 2 + 5} y={196 - 46 * Math.sqrt(b) + 5} width="18" height="18" />
         <rect x={490 - hw / 2} y={196 - 46 * Math.sqrt(b)} width={hw} height={46 * Math.sqrt(b)} className="xray-w" />
         <text x="150" y="178" textAnchor="middle" className="xray-wl">short {S}</text>
         <text x="490" y="182" textAnchor="middle" className="xray-wl dark">long {L}</text>
-        {b !== 1 && <text x="490" y={186 - 46 * Math.sqrt(b) - 8} textAnchor="middle" className="xray-k">×{b.toFixed(2)} per $1 of {S}</text>}
+        {b !== 1 && <text x={490 + hw / 2 + 8} y={196 - 23 * Math.sqrt(b) + 4} className="xray-k">×{b.toFixed(2)}</text>}
         <path d="M320,206 L304,236 H336 Z" className="xray-beam" />
         {/* price paths that cancel */}
         <path d={line(vs)} className="xray-price" stroke="var(--mark-gold)" />
