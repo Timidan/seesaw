@@ -6,7 +6,7 @@ import { PRICE_API_URL } from "../api/config";
 import type { ExchangeSymbol } from "../carry/data";
 import { getExecutionMarkets } from "../carry/execMarkets";
 
-// UI glue: cached loaders over Codex's public-data fetchers. No logic beyond caching.
+// UI glue: cached loaders over the public-data fetchers in src/carry. No logic beyond caching.
 const cache = new Map<string, Promise<unknown>>();
 function once<T>(key: string, fn: () => Promise<T>): Promise<T> {
   if (!cache.has(key)) cache.set(key, fn().catch((e) => { cache.delete(key); throw e; }));

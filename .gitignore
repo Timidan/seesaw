@@ -8,3 +8,6 @@ brainstorm/
 .taste-skill/
 scripts/anatomy/bundle/
 scripts/anatomy/shots/
+# internal planning notes and the figure's local preview harness stay out of the repo
+HACKATHON.md
+scripts/anatomy/
