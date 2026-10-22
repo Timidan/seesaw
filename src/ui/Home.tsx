@@ -12,7 +12,7 @@ import { scene } from "./scene";
 import { LiveSpread } from "./LiveSpread";
 import { CarryMachine } from "./anatomy/CarryMachine";
 import { useExecMarkets, useFunding, useSnapshot } from "./data";
-import { base, corr, pct, z } from "./format";
+import { base, corr, pct, pickHero, z } from "./format";
 
 export const spreadHref = (p: { short: string; long: string }) => `#/spread/${p.short}/${p.long}`;
 
@@ -20,8 +20,7 @@ export function Home() {
   const snap = useSnapshot();
   const pairs = snap.data?.pairs ?? [];
   // Hero = best risk-adjusted spread among pairs that move together.
-  const hero = useMemo(() => [...pairs].filter((p) => p.corr >= 0.6 && p.betaCarryApr > 0 && p.carryToRisk != null)
-    .sort((a, b) => b.carryToRisk - a.carryToRisk)[0], [pairs]);
+  const hero = useMemo(() => pickHero(pairs), [pairs]);
   const bins = useMemo(() => Object.fromEntries(Object.entries(snap.data?.symbols ?? {}).map(([k, v]) => [k, v.bins ?? []])), [snap.data]);
   const heroSym = hero ? snap.data?.symbols[hero.short] : undefined;
   const execLoad = useExecMarkets();
@@ -108,6 +107,7 @@ function How({ hero, hours, paid }: { hero: Pair; hours: number; paid: number })
         <div>
           <h2 id="how-title" className="display">Let the crowd pay</h2>
           <p className="section-sub">Press the beam. With the hedge on, it barely moves. Lift the hedge and press again.</p>
+          <p className="section-sub"><a className="link" href="/story.html">New to this? Take the one-minute tour</a></p>
         </div>
         <CarryMachine titleId="how-title" short={base(hero.short)} long={base(hero.long)} beta={hero.beta} carryApr={hero.betaCarryApr}
           hoursPaid={paid} hours={hours} corr={hero.corr} hedgedVolApr={hero.hedgedVolApr} dollarVolApr={hero.dollarVolApr} />

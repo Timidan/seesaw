@@ -1,0 +1,42 @@
+/* Seesaw theme for the scroll engine. The engine's defaults live in @layer sw, so these unlayered
+   rules win without specificity games. Same tokens as the app: ink ground, one signal yellow. */
+:root { color-scheme: dark; }
+html, body { background: #080a0d; }
+.sw-root {
+  --sw-bg: #080a0d; --sw-ink: #ebeff4; --sw-ink-soft: #b2b8bf; --sw-accent: #fde819;
+  --sw-font-display: "Jersey 15", ui-sans-serif, system-ui, sans-serif;
+  --sw-font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.st-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* the film, dithered like the hero: above the raw clips, under the copy */
+.story-dither { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 15; pointer-events: none; image-rendering: pixelated; }
+.sw-particles { display: none; }
+
+.sw-brand__mark { width: 30px; height: 18px; border-radius: 0; box-shadow: none; background: url(/favicon.svg) center / contain no-repeat; }
+.sw-brand__name { font-family: var(--sw-font-display); font-weight: 400; font-size: 24px; }
+.sw-topcta { border-radius: 2px; padding: 0 18px; min-height: 40px; display: inline-flex; align-items: center; background: var(--sw-accent); color: #080a0d; font-weight: 700; font-size: 15px; }
+.sw-scrollbar { background: rgb(253 232 25 / 0.14); }
+
+.sw-copy__num { font-family: var(--sw-font-body); font-variant-numeric: tabular-nums; letter-spacing: 0; font-size: 13px; color: var(--sw-ink-soft); }
+.sw-copy__title { font-weight: 400; font-size: clamp(44px, 5vw, 76px); line-height: 0.9; letter-spacing: -0.01em; text-wrap: balance; }
+.sw-copy__body { font-size: 18px; color: var(--sw-ink-soft); text-wrap: pretty; }
+.sw-copy__tags li { border: 0; border-radius: 2px; background: #1b1e23; color: var(--sw-ink); font-weight: 500; font-size: 14px; padding: 6px 10px; font-variant-numeric: tabular-nums; }
+.sw-btn { border-radius: 2px; font-weight: 700; padding: 0 22px; min-height: 48px; display: inline-flex; align-items: center; }
+.sw-btn--primary { background: var(--sw-accent); color: #080a0d; }
+.sw-btn--ghost { border: 0; background: #1b1e23; color: var(--sw-ink); }
+.sw-btn:focus-visible, .sw-topcta:focus-visible, .sw-brand:focus-visible, .sw-route__dot:focus-visible { outline: 2px solid var(--sw-accent); outline-offset: 3px; }
+.sw-route__label { border: 0; border-radius: 2px; background: #1b1e23; color: var(--sw-ink); backdrop-filter: none; font-size: 13px; }
+.sw-hint { font-family: var(--sw-font-body); letter-spacing: 0; text-transform: none; font-size: 13px; }
+
+/* page-authored art inside the copy: real coin icons and the one big figure */
+.sw-copy__art { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 18px; }
+.st-leg { display: inline-flex; align-items: center; gap: 8px; font-weight: 650; font-size: 17px; }
+.st-leg img { width: 28px; height: 28px; border-radius: 50%; background: #1b1e23; }
+.st-leg small { font-size: 14px; font-weight: 500; color: var(--sw-ink-soft); }
+.st-leg.short small { color: var(--sw-accent); }
+.st-big { font-family: var(--sw-font-display); font-size: clamp(64px, 6.4vw, 104px); line-height: 0.82; color: var(--sw-accent); font-variant-numeric: tabular-nums; }
+.st-big-label { flex-basis: 100%; max-width: 36ch; font-size: 14px; color: var(--sw-ink-soft); }
+.st-error { position: fixed; inset: auto 24px 24px; z-index: 70; color: var(--sw-ink, #ebeff4); font-family: "Geist", sans-serif; }
+.st-error a { color: inherit; }
