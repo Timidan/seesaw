@@ -3,6 +3,8 @@ import { getFundingHistory, getKlines, getPremiumIndex } from "../carry/data";
 import type { FundingPoint, PricePoint } from "../carry/math";
 import type { Snapshot } from "../carry/snapshot";
 import { PRICE_API_URL } from "../api/config";
+import type { ExchangeSymbol } from "../carry/data";
+import { getExecutionMarkets } from "../carry/execMarkets";
 
 // UI glue: cached loaders over Codex's public-data fetchers. No logic beyond caching.
 const cache = new Map<string, Promise<unknown>>();
@@ -61,4 +63,20 @@ export const useLiveFunding = () =>
   useLoad<Record<string, number>>("premium", async () => {
     const rows = await getPremiumIndex();
     return Object.fromEntries(rows.map((r) => [r.symbol, Number(r.fundingRate) * 24 * 365 * 100]));
+  });
+
+/** Execution-network markets that can actually fill a small market order: listed AND with bids and asks
+ *  worth at least $40 in the top five levels. Testnet lists ADA with an empty book, for example. */
+export const useExecMarkets = () =>
+  useLoad<ExchangeSymbol[]>("exec-markets", async () => {
+    const listed = await getExecutionMarkets();
+    const ok = await Promise.all(listed.map(async (m) => {
+      try {
+        const r = await fetch(`${PRICE_API_URL}/v2/depth?symbol=${m.symbol}&limit=5`);
+        const d = await r.json() as { bids?: [string, string][]; asks?: [string, string][] };
+        const usd = (rows?: [string, string][]) => (rows ?? []).slice(0, 5).reduce((a, [p, q]) => a + Number(p) * Number(q), 0);
+        return usd(d.bids) >= 40 && usd(d.asks) >= 40;
+      } catch { return false; }
+    }));
+    return listed.filter((_, i) => ok[i]);
   });

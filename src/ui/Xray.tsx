@@ -3,12 +3,13 @@ import { reducedMotion } from "./storm";
 import { base, corr } from "./format";
 
 /** X-ray of a spread: where each leg's funding comes from, and the two price paths that cancel. Real numbers only. */
-export function Xray({ short, long, shortApr, longApr, correlation, ps, pl }: {
+export function Xray({ short, long, shortApr, longApr, correlation, beta, ps, pl }: {
   short: string; long: string;
   /** funding received a year by each leg, 30-day average, % (negative = that leg pays) */
   shortApr: number; longApr: number;
-  correlation: number; ps?: PricePoint[]; pl?: PricePoint[];
+  correlation: number; beta?: number; ps?: PricePoint[]; pl?: PricePoint[];
 }) {
+  const b = Math.max(0.5, Math.min(2, beta ?? 1)), hw = 76 * Math.sqrt(b); // hedge weight drawn by its size
   const S = base(short), L = base(long), total = shortApr + longApr;
   const motion = !reducedMotion();
   const path = (pts: PricePoint[] | undefined, other: PricePoint[] | undefined): number[] => {
@@ -53,9 +54,10 @@ export function Xray({ short, long, shortApr, longApr, correlation, ps, pl }: {
         {/* beam, weights, pivot */}
         <rect x="80" y="196" width="480" height="10" className="xray-beam" />
         <rect x="112" y="150" width="76" height="46" className="xray-w hot" />
-        <rect x="452" y="150" width="76" height="46" className="xray-w" />
+        <rect x={490 - hw / 2} y={196 - 46 * Math.sqrt(b)} width={hw} height={46 * Math.sqrt(b)} className="xray-w" />
         <text x="150" y="178" textAnchor="middle" className="xray-wl">short {S}</text>
-        <text x="490" y="178" textAnchor="middle" className="xray-wl dark">long {L}</text>
+        <text x="490" y="182" textAnchor="middle" className="xray-wl dark">long {L}</text>
+        {b !== 1 && <text x="490" y={186 - 46 * Math.sqrt(b) - 8} textAnchor="middle" className="xray-k">×{b.toFixed(2)} per $1 of {S}</text>}
         <path d="M320,206 L304,236 H336 Z" className="xray-beam" />
         {/* price paths that cancel */}
         <path d={line(vs)} className="xray-price" stroke="var(--mark-gold)" />

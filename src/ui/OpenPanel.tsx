@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BUILDER_FEE_BPS } from "../api/config";
 import { detectInstalledWallets, type SupportedChain } from "../api/wallets";
 import type { ExchangeSymbol } from "../carry/data";
-import { getExecutionMarkets, isTradable } from "../carry/execMarkets";
+import { isTradable } from "../carry/execMarkets";
 import { DEFAULT_FEE_RATES } from "../math/fees";
 import { useSession } from "../session/SessionProvider";
 import { useBuilderConnect } from "../session/useBuilderConnect";
@@ -11,7 +11,7 @@ import type { SpreadRecord } from "../spread/store";
 import { useSpreadsCtx } from "./spreadsContext";
 import { Beam } from "./bits";
 import { DepositInline } from "./DepositInline";
-import { useExecMarks, useSnapshot } from "./data";
+import { useExecMarkets, useExecMarks, useSnapshot } from "./data";
 import { base, pct, shortId, usd } from "./format";
 import { reducedMotion, strike } from "./storm";
 
@@ -21,8 +21,8 @@ const CHAINS: { id: SupportedChain; label: string }[] = [
 
 export function OpenPanel({ short, long }: { short: string; long: string }) {
   const session = useSession();
-  const [markets, setMarkets] = useState<ExchangeSymbol[] | null>(null);
-  useEffect(() => { getExecutionMarkets().then(setMarkets, () => setMarkets([])); }, []);
+  const execLoad = useExecMarkets();
+  const markets: ExchangeSymbol[] | null = execLoad.data ?? (execLoad.error ? [] : null);
   const tradable = !!markets && isTradable(short, long, markets);
 
   return (
@@ -43,7 +43,7 @@ function NotOnTestnet({ markets, short, long }: { markets: ExchangeSymbol[]; sho
   return (
     <>
       <p className="notice" style={{ marginTop: 16 }}>
-        <b>{base(short)}</b> / <b>{base(long)}</b> trades on Strike mainnet. This build sends orders to Strike testnet, which lists {markets.map((m) => base(m.symbol)).join(", ") || "only a few markets"}.
+        <b>{base(short)}</b> / <b>{base(long)}</b> trades on Strike mainnet. This build sends orders to Strike testnet, where only {markets.map((m) => base(m.symbol)).join(", ") || "a few markets"} have enough buyers and sellers to fill.
       </p>
       {alts.length > 0 && (
         <>
@@ -101,14 +101,21 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [hedgeMode, setHedgeMode] = useState<"beta" | "dollar">("beta");
+  const snap = useSnapshot();
+  const pairRow = snap.data?.pairs.find((p) => p.short === short && p.long === long);
+  const beta = pairRow?.beta ?? 1;
+  const sigma = useMemo(() => Object.fromEntries(Object.entries(snap.data?.symbols ?? {}).map(([k, v]) => [k, v.sigmaHourly])), [snap.data]);
+  const hourlyCarry = pairRow ? (hedgeMode === "beta" ? pairRow.betaCarryApr : pairRow.carryApr) / 100 / 8760 : undefined;
   const conn = session.connection!;
   const builderFeeBps = Math.min(BUILDER_FEE_BPS, conn.feeShareBps);
   const filters = useMemo(() => Object.fromEntries(markets.map((m) => [m.symbol, m])), [markets]);
   const ready = marks[short] > 0 && marks[long] > 0;
   const plan = useMemo(
-    () => (ready ? spreads.plan({ short, long, notionalPerLeg: notional, leverage, marks, filters, feeRates: DEFAULT_FEE_RATES, builderFeeBps }) : null),
+    () => (ready ? spreads.plan({ short, long, notionalPerLeg: notional, leverage, marks, filters, feeRates: DEFAULT_FEE_RATES, builderFeeBps,
+      hedge: { mode: hedgeMode, beta }, sigmaHourly: sigma, hourlyCarry }) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ready, short, long, notional, leverage, marks[short], marks[long], filters, builderFeeBps, session.account, session.positions],
+    [ready, short, long, notional, leverage, marks[short], marks[long], filters, builderFeeBps, session.account, session.positions, hedgeMode, beta, sigma, hourlyCarry],
   );
   const active = spreads.spreads.find((r) => r.id === activeId) ?? null;
 
@@ -131,6 +138,13 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
         <input id="n" className="input" type="number" inputMode="decimal" min={10} step={5} value={notional} onChange={(e) => setNotional(Math.max(0, Number(e.target.value) || 0))} />
       </div>
       <div className="field">
+        <span id="hedge" style={{ fontSize: 13, color: "var(--fg-2)" }}>Size of the {base(long)} leg</span>
+        <div className="seg" role="group" aria-labelledby="hedge" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <button type="button" aria-pressed={hedgeMode === "beta"} onClick={() => setHedgeMode("beta")}>Hedged ×{beta.toFixed(2)}</button>
+          <button type="button" aria-pressed={hedgeMode === "dollar"} onClick={() => setHedgeMode("dollar")}>Equal dollars</button>
+        </div>
+      </div>
+      <div className="field">
         <span id="lev" style={{ fontSize: 13, color: "var(--fg-2)" }}>Leverage on each leg (isolated)</span>
         <div className="seg" role="group" aria-labelledby="lev">
           {[1, 2, 3].map((l) => <button key={l} type="button" aria-pressed={leverage === l} onClick={() => setLeverage(l)}>{l}×</button>)}
@@ -140,10 +154,11 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
         <dl className="kv">
           {(["short", "long"] as SpreadSide[]).map((s) => {
             const leg = plan.legs[s];
-            return <div key={s}><dt>{s === "short" ? "Sell" : "Buy"} {base(s === "short" ? short : long)}</dt><dd>{leg ? `${leg.size} · liq ${leg.liquidationPrice > 0 ? usd(leg.liquidationPrice, leg.liquidationPrice < 10 ? 4 : 2) : "none"}` : "…"}</dd></div>;
+            return <div key={s}><dt>{s === "short" ? "Sell" : "Buy"} {base(s === "short" ? short : long)} <span className="muted">({usd(leg?.notional ?? 0, 0)})</span></dt><dd>{leg ? `${leg.size} · liq ${leg.liquidationPrice > 0 ? usd(leg.liquidationPrice, leg.liquidationPrice < 10 ? 4 : 2) : "none"}${leg.liqProb30d != null ? ` · ${(leg.liqProb30d * 100).toFixed(leg.liqProb30d < 0.1 ? 1 : 0)}% in 30 d` : ""}` : "…"}</dd></div>;
           })}
           <div><dt>Margin needed</dt><dd>{usd(plan.requiredMargin)}</dd></div>
           <div><dt>Fees: Strike + Seesaw ({builderFeeBps} bps)</dt><dd>{usd(plan.estimatedTakerFees)} + {usd(plan.estimatedBuilderFees)}</dd></div>
+          {plan.breakEvenDays != null && Number.isFinite(plan.breakEvenDays) && <div><dt>Funding covers the fees in</dt><dd>{plan.breakEvenDays < 1 ? `${Math.max(1, Math.round(plan.breakEvenDays * 24))} hours` : `${plan.breakEvenDays.toFixed(1)} days`}</dd></div>}
         </dl>
       )}
       {!ready && <div className="skel" style={{ height: 80, marginTop: 18 }} />}

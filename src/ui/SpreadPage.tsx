@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { spreadStats } from "../carry/math";
+import { firstPassageProb, spreadStats } from "../carry/math";
 import { FundingTape } from "./FundingTape";
 import { RatioChart, FundingChart } from "./charts";
 import { OpenPanel } from "./OpenPanel";
@@ -37,10 +37,15 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
 
   const S = base(short), L = base(long);
   const sym = snap.data?.symbols;
-  const shortApr = sym?.[short]?.fundingApr30d ?? 0, longApr = -(sym?.[long]?.fundingApr30d ?? 0);
+  const beta = pair && !flipped ? pair.beta : 1;
+  const shortApr = sym?.[short]?.fundingApr30d ?? 0, longApr = -(sym?.[long]?.fundingApr30d ?? 0) * beta;
   const carry = pair ? shortApr + longApr : null;
+  // chance an isolated 2× leg reaches liquidation within 30 days (zero-drift first passage)
+  const liq30 = (s: string, side: "short" | "long") => sym?.[s]?.sigmaHourly ? firstPassageProb(0.48, sym[s].sigmaHourly, 720, side) : null;
+  const worstLiq = Math.max(liq30(short, "short") ?? 0, liq30(long, "long") ?? 0);
+  const halfLife = pair?.halfLifeHours ?? null;
   const nowCarry = live.data ? (live.data[short] ?? 0) - (live.data[long] ?? 0) : null;
-  const perWeek = carry !== null ? (size * carry) / 100 / 52 : null;
+  const perWeek = carry !== null ? (size * carry) / 100 / 52 : null; // per $ of the short leg, hedge-sized long leg
 
   return (
     <main className="wrap spread-top">
@@ -52,15 +57,16 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
 
       <dl className="stats">
         <div className="stat"><dt>A year, 30-day funding</dt><dd className={carry !== null && carry > 0 ? "hot" : ""}>{carry !== null ? pct(carry) : "…"}</dd></div>
-        <div className="stat"><dt>This hour, annualised</dt><dd>{nowCarry !== null ? pct(nowCarry) : "…"}</dd></div>
-        <div className="stat"><dt>Moves together</dt><dd>{pair ? corr(pair.corr) : "…"}</dd></div>
-        <div className="stat"><dt>Swing, 1σ</dt><dd>{ratio ? `${ratio.spreadSd.toFixed(1)}%` : "…"}</dd></div>
+        <div className="stat"><dt>Paying now, last 72 h</dt><dd style={{ color: pair && pair.ewmaCarryApr < 0 ? "var(--oxide)" : undefined }}>{pair ? pct(pair.ewmaCarryApr) : nowCarry !== null ? pct(nowCarry) : "…"}</dd></div>
+        <div className="stat"><dt>Per unit of risk</dt><dd>{pair?.carryToRisk != null ? pair.carryToRisk.toFixed(2) : "…"}</dd></div>
+        <div className="stat"><dt>Hedge, {S} : {L}</dt><dd>1 : {beta.toFixed(2)}</dd></div>
+        <div className="stat"><dt>Swing a year, hedged</dt><dd>{pair ? `${pair.hedgedVolApr.toFixed(0)}%` : "…"}<small>{pair ? `vs ${pair.dollarVolApr.toFixed(0)}% at 1 : 1` : ""}</small></dd></div>
         <div className="stat"><dt>Stretch now</dt><dd style={{ display: "flex", alignItems: "center", gap: 10 }}>{ratio ? z(ratio.z) : "…"} {ratio && <Beam z={ratio.z} size={36} />}</dd></div>
       </dl>
 
       <div className="spread-grid">
         <div>
-          {pair ? <Xray short={short} long={long} shortApr={shortApr} longApr={longApr} correlation={pair.corr} ps={ks.data} pl={kl.data} /> : <div className="skel" style={{ height: 320 }} />}
+          {pair ? <Xray short={short} long={long} shortApr={shortApr} longApr={longApr} correlation={pair.corr} beta={beta} ps={ks.data} pl={kl.data} /> : <div className="skel" style={{ height: 320 }} />}
 
           <section className="chart-block" aria-labelledby="tapes">
             <h2 className="h-sec" id="tapes">Every hour, who got paid</h2>
@@ -109,15 +115,15 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
             <ul className="risk-list">
               <li>
                 <span className="risk-art">{fs.data ? <FundingTape points={fs.data} side="short" height={22} label={`${S} funding by hour, red hours shorts paid`} /> : null}</span>
-                <span><b>Funding flips.</b> {funding ? `${funding.flips} of ${fs.data?.length ?? 720} hours went the other way.` : ""}</span>
+                <span><b>Funding flips.</b> {funding ? `${funding.flips} of ${fs.data?.length ?? 720} hours went the other way` : ""}{pair ? `; ${Math.round(pair.flip7d * 100)}% of the last week.` : "."}</span>
               </li>
               <li>
                 <span className="risk-art"><Beam z={ratio ? Math.sign(ratio.z) * 3 : 3} size={44} /></span>
-                <span><b>Legs drift.</b> {ratio ? `Worst 30-day move ${ratio.worstMove.toFixed(1)}%: more than weeks of funding.` : ""}</span>
+                <span><b>Legs drift.</b> {ratio ? `Worst 30-day move ${ratio.worstMove.toFixed(1)}%.` : ""}{halfLife ? ` Stretches have pulled back with a half-life of about ${halfLife < 48 ? `${Math.round(halfLife)} hours` : `${(halfLife / 24).toFixed(1)} days`}.` : ""}</span>
               </li>
               <li>
                 <span className="risk-art"><span className="liq"><i style={{ left: "50%" }} /><i className="x" style={{ left: "96%" }} /></span></span>
-                <span><b>Each leg can be liquidated.</b> Isolated margin; Seesaw shows each liquidation price first.</span>
+                <span><b>Each leg can be liquidated.</b> {worstLiq ? `At 2×, about ${Math.round(worstLiq * 100)}% chance that the jumpier leg reaches its liquidation price within 30 days.` : "Isolated margin; Seesaw shows each liquidation price first."}</span>
               </li>
               <li>
                 <span className="risk-art"><span className="two"><i /><i /></span></span>
