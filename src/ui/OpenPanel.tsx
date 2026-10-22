@@ -146,6 +146,18 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
     finally { setBusy(false); }
   };
 
+  // Just opened from this ticket: show the fills and where to follow the spread, not the pre-trade checks
+  // (which would now flag our own new positions and the smaller balance).
+  if (active && spreads.status(active).status === "open") {
+    return (
+      <>
+        <LegBoard record={active} />
+        <p className="sub" style={{ marginTop: 12 }}><a className="link" href="#your-spreads" onClick={(e) => { e.preventDefault(); document.getElementById("your-spreads")?.scrollIntoView({ behavior: "smooth" }); }}>Follow its P&amp;L and funding under Your spreads</a></p>
+        <button type="button" className="btn btn-line" onClick={() => setActiveId(null)}>Open another spread</button>
+      </>
+    );
+  }
+
   return (
     <>
       <dl className="kv">

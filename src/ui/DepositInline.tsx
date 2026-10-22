@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ConnectedWallet } from "../api/wallets";
 import { EVM_DEPOSIT_CHAIN } from "../api/config";
 import { useDeposit } from "../session/useDeposit";
+import { useSession } from "../session/SessionProvider";
 import { shortId, usd } from "./format";
 
 const ASSETS: Record<string, { symbol: string; decimals: number }[]> = {
@@ -28,6 +29,14 @@ export function DepositInline({ wallet }: { wallet: ConnectedWallet }) {
   const dec = assets.find((a) => a.symbol === asset)?.decimals ?? 6;
   const atomic = toAtomic(amount, dec);
   const busy = d.status === "quoting" || d.status === "submitting";
+  const { refreshAccount } = useSession();
+  // Strike credits after the chain confirms; re-read the balance every 10 s (up to 5 min) in case the stream misses it.
+  useEffect(() => {
+    if (d.status !== "pending") return;
+    let n = 0;
+    const t = window.setInterval(() => { refreshAccount(); if (++n >= 30) window.clearInterval(t); }, 10000);
+    return () => window.clearInterval(t);
+  }, [d.status, refreshAccount]);
 
   return (
     <div className="deposit">

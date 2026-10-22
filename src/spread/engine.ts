@@ -81,7 +81,9 @@ export async function getFundingSince(symbol: string, openedAt: number): Promise
   const response = await authenticatedFetch(`${API_BASE_URL}/v2/history/funding?${query}`, "GET");
   if (!response.ok) return throwApiError(response, "Funding history failed");
   const data: unknown = await response.json();
-  const rows = Array.isArray(data) ? data : data && typeof data === "object" ? (data as Record<string, unknown>).rows ?? (data as Record<string, unknown>).funding ?? (data as Record<string, unknown>).history ?? (data as Record<string, unknown>).data : null;
+  const obj = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
+  // before the first hourly settlement Strike answers {"count":0,"funding":null}: that is an empty history, not an error
+  const rows = Array.isArray(data) ? data : obj.rows ?? obj.funding ?? obj.history ?? obj.data ?? (Number(obj.count) === 0 ? [] : null);
   if (!Array.isArray(rows)) throw new Error("Unexpected funding history response");
   return rows as FundingHistoryRow[];
 }

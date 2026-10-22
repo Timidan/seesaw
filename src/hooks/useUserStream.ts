@@ -186,6 +186,12 @@ export function useUserStream(accountId: string | null) {
     setIsLoading(false);
   }, []);
 
+  /** Re-read the account. The stream only carries the wallet balance, so available balance and margin
+   *  go stale after deposits, fills and funding unless the account is read again. */
+  const refreshAccount = useCallback(() => {
+    getAccount().then((a) => { if (isMountedRef.current && a) setAccount(a); }).catch(() => {});
+  }, []);
+
   /** Re-read effective symbol settings (e.g. after a leverage / margin mode change). */
   const refreshSymbols = useCallback(() => {
     getSymbols().then((s) => isMountedRef.current && setSymbols(s)).catch(() => {});
@@ -269,6 +275,7 @@ export function useUserStream(accountId: string | null) {
           toast.success(`Deposit credited: +$${(toNumber(wb) - prevWallet).toFixed(2)}`);
         }
         setAccount((prev) => (prev ? { ...prev, wallet_balance: String(wb) } : prev));
+        refreshAccount();
       }
 
       // Positions
@@ -318,11 +325,11 @@ export function useUserStream(accountId: string | null) {
       unsubOrder();
       userStream.disconnect();
     };
-  }, [accountId, loadRest, refreshSymbols, showOrderToast, bufferOrderUpdate]);
+  }, [accountId, loadRest, refreshSymbols, refreshAccount, showOrderToast, bufferOrderUpdate]);
 
   const walletBalance = account ? parseFloat(account.wallet_balance || "0") : 0;
 
-  return { positions, orders, walletBalance, account, symbols, refreshSymbols, isLoading };
+  return { positions, orders, walletBalance, account, symbols, refreshSymbols, refreshAccount, isLoading };
 }
 
 // ═══════════════════════════════════════════════════════════════════

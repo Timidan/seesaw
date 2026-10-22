@@ -13,7 +13,7 @@ export function MySpreads() {
   if (!session.connection || spreads.spreads.length === 0) return null;
   const list = [...spreads.spreads].sort((a, b) => b.openedAt - a.openedAt);
   return (
-    <section className="section" aria-labelledby="mine" style={{ paddingTop: 72 }}>
+    <section className="section" id="your-spreads" aria-labelledby="mine" style={{ paddingTop: 72 }}>
       <h2 id="mine">Your spreads</h2>
       <p className="section-sub">Strike testnet, account {session.connection.accountId.slice(0, 8)}. Funding is read from your Strike funding history since each spread opened.</p>
       <div style={{ marginTop: 22, display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
@@ -27,6 +27,7 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
   const spreads = useSpreadsCtx();
   const marks = useExecMarks([record.short, record.long]);
   const [pnl, setPnl] = useState<Awaited<ReturnType<typeof spreads.pnl>> | null>(null);
+  const [pnlError, setPnlError] = useState("");
   const [closing, setClosing] = useState(false);
   const { status } = spreads.status(record);
   const live = status === "open" || status === "one_leg";
@@ -34,7 +35,7 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
   useEffect(() => {
     if (!(marks[record.short] > 0 && marks[record.long] > 0)) return;
     let alive = true;
-    spreads.pnl(record.id, marks).then((p) => alive && setPnl(p), () => {});
+    spreads.pnl(record.id, marks).then((p) => { if (alive) { setPnl(p); setPnlError(""); } }, (e) => alive && setPnlError(String((e as Error)?.message ?? e)));
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record.id, marks[record.short], marks[record.long], status]);
@@ -55,6 +56,7 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
           <div><dt><b>Net</b></dt><dd style={{ ...tone(pnl.total.net), fontWeight: 700 }}>{signedUsd(pnl.total.net)}</dd></div>
         </dl>
       )}
+      {!pnl && pnlError && <p className="notice">P&amp;L is not available yet: {pnlError}</p>}
       <LegBoard record={record} />
       {live && (
         <button type="button" className="btn btn-line" style={{ width: "100%", marginTop: 14 }} disabled={closing}
