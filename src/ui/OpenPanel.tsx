@@ -40,7 +40,9 @@ export function OpenPanel({ short, long }: { short: string; long: string }) {
 
 function NotOnTestnet({ markets, short, long }: { markets: ExchangeSymbol[]; short: string; long: string }) {
   const snap = useSnapshot();
-  const alts = (snap.data?.pairs ?? []).filter((p) => p.carryApr > 0 && isTradable(p.short, p.long, markets)).slice(0, 3);
+  // same number and order as the board: hedged carry, best per unit of risk first
+  const alts = (snap.data?.pairs ?? []).filter((p) => p.betaCarryApr > 0 && isTradable(p.short, p.long, markets))
+    .sort((a, b) => (b.carryToRisk ?? -Infinity) - (a.carryToRisk ?? -Infinity)).slice(0, 3);
   return (
     <>
       <p className="notice" style={{ marginTop: 16 }}>
@@ -54,7 +56,7 @@ function NotOnTestnet({ markets, short, long }: { markets: ExchangeSymbol[]; sho
               <a key={p.short + p.long} className="leg-row" href={`#/spread/${p.short}/${p.long}`} style={{ textDecoration: "none" }} data-state="filled">
                 <span className="leg-dot" aria-hidden />
                 <span className="what">short {base(p.short)} / long {base(p.long)}</span>
-                <span className="state" style={{ color: "var(--strike)" }}>{pct(p.carryApr)}</span>
+                <span className="state" style={{ color: "var(--strike)" }}>{pct(p.betaCarryApr)}</span>
               </a>
             ))}
           </div>
@@ -98,6 +100,7 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
   const spreads = useSpreadsCtx();
   const marks = useExecMarks([short, long]);
   const [notional, setNotional] = useState(20);
+  const [touched, setTouched] = useState(false);
   const [leverage, setLeverage] = useState(2);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -112,6 +115,21 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
   const builderFeeBps = Math.min(BUILDER_FEE_BPS, conn.feeShareBps);
   const filters = useMemo(() => Object.fromEntries(markets.map((m) => [m.symbol, m])), [markets]);
   const ready = marks[short] > 0 && marks[long] > 0;
+  // The smallest leg Strike accepts here, from its own lot step, minimum size and minimum order value
+  // (testnet BTC needs $100 a leg). Start the ticket there so the first thing a user sees can be opened.
+  const minLeg = (symbol: string) => {
+    const f = filters[symbol], mark = marks[symbol];
+    if (!f || !(mark > 0)) return 0;
+    const lot = f.filters.find((x) => x.filterType === "MARKET_LOT_SIZE") ?? f.filters.find((x) => x.filterType === "LOT_SIZE");
+    const step = Number(lot?.stepSize) || 0, minQty = Number(lot?.minQty) || 0;
+    const minValue = Number(f.filters.find((x) => x.filterType === "MIN_NOTIONAL")?.notional) || 0;
+    if (!(step > 0)) return minValue;
+    return Math.max(Math.ceil(minValue / (step * mark)), Math.ceil(minQty / step)) * step * mark;
+  };
+  const ratio = hedgeMode === "beta" ? beta : 1;
+  const minSize = ready ? Math.ceil((Math.max(minLeg(short), minLeg(long) / ratio) * 1.02) / 5) * 5 : 0; // +2% for price moves
+  useEffect(() => { if (!touched && minSize) setNotional(Math.max(20, minSize)); }, [minSize, touched]);
+  const plain = (b: string) => (/minimum/i.test(b) && minSize ? `Strike's smallest order here needs ${usd(minSize, 0)} a leg. Raise the size to at least that.` : b);
   const plan = useMemo(
     () => (ready ? spreads.plan({ short, long, notionalPerLeg: notional, leverage, marks, filters, feeRates: DEFAULT_FEE_RATES, builderFeeBps,
       hedge: { mode: hedgeMode, beta }, sigmaHourly: sigma, hourlyCarry }) : null),
@@ -136,7 +154,8 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
       </dl>
       <div className="field">
         <label htmlFor="n">Size of each leg (USD)</label>
-        <input id="n" className="input" type="number" inputMode="decimal" min={10} step={5} value={notional} onChange={(e) => setNotional(Math.max(0, Number(e.target.value) || 0))} />
+        <input id="n" className="input" type="number" inputMode="decimal" min={minSize || 10} step={5} value={notional} aria-describedby="n-min" onChange={(e) => { setTouched(true); setNotional(Math.max(0, Number(e.target.value) || 0)); }} />
+        {minSize > 0 && <span id="n-min" className="sub" style={{ marginTop: 0 }}>Smallest Strike allows here: {usd(minSize, 0)} a leg</span>}
       </div>
       <div className="field">
         <span id="hedge" style={{ fontSize: 13, color: "var(--fg-2)" }}>Size of the {base(long)} leg</span>
@@ -164,7 +183,7 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
       )}
       {!ready && <div className="skel" style={{ height: 80, marginTop: 18 }} />}
       {plan?.warnings.map((w) => <p key={w} className="notice warn"><b>Note:</b> {w}</p>)}
-      {plan?.blockers.map((b) => <p key={b} className="notice err"><b>Can't open yet.</b> {b}</p>)}
+      {[...new Set(plan?.blockers.map(plain))].map((b) => <p key={b} className="notice err"><b>Can't open yet.</b> {b}</p>)}
       {plan?.blockers.some((b) => /balance|margin|fund/i.test(b)) && <DepositInline wallet={conn.wallet} />}
       <button type="button" className="btn btn-strike" disabled={!plan || plan.blockers.length > 0 || busy || (!!active && spreads.status(active).status === "opening")} onClick={submit}>
         {busy ? "Sending both legs…" : `Open short ${base(short)} / long ${base(long)}`}

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { ConnectedWallet } from "../api/wallets";
+import { EVM_DEPOSIT_CHAIN } from "../api/config";
 import { useDeposit } from "../session/useDeposit";
 import { shortId, usd } from "./format";
 
 const ASSETS: Record<string, { symbol: string; decimals: number }[]> = {
-  ethereum: [{ symbol: "USDC", decimals: 6 }, { symbol: "ETH", decimals: 18 }],
+  ethereum: [{ symbol: "USDC", decimals: 6 }], // Strike testnet rejects ETH ("unsupported asset")
   solana: [{ symbol: "USDC", decimals: 6 }, { symbol: "SOL", decimals: 9 }],
   cardano: [{ symbol: "ADA", decimals: 6 }],
 };
@@ -31,6 +32,9 @@ export function DepositInline({ wallet }: { wallet: ConnectedWallet }) {
   return (
     <div className="deposit">
       <p className="sub" style={{ color: "var(--fg-2)" }}>Add funds to this Strike account from your {wallet.chain} wallet.</p>
+      {wallet.chain === "ethereum" && EVM_DEPOSIT_CHAIN.id === "0xaa36a7" && (
+        <p className="sub">Testnet takes USDC on Sepolia. Get free test USDC at <a className="link" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com</a>; your wallet switches to Sepolia when you deposit.</p>
+      )}
       <div className="deposit-row">
         {assets.length > 1 && (
           <div className="seg" role="group" aria-label="Asset" style={{ gridTemplateColumns: `repeat(${assets.length}, 1fr)` }}>

@@ -36,3 +36,7 @@ export const BUILDER_CODE =
 export const BUILDER_FEE_BPS = Number(import.meta.env.VITE_BUILDER_FEE_BPS ?? "0");
 
 export const DEMO_ACCOUNT_ID = import.meta.env.VITE_DEMO_ACCOUNT_ID ?? "";
+
+// The EVM network deposits are sent on. Strike testnet's deposit approves Circle's Sepolia USDC
+// (0x1c7d…7238), so testnet means Sepolia. Mainnet is assumed to be Ethereum: verify before mainnet use.
+export const EVM_DEPOSIT_CHAIN = API_BASE_URL.includes("testnet") ? { id: "0xaa36a7", name: "Sepolia" } : { id: "0x1", name: "Ethereum" };
