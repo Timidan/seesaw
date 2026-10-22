@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { getAllHistories, getExchangeInfo, getPremiumIndex } from "../src/carry/data";
-import { fundingStats, makePair } from "../src/carry/math";
+import { fundingStats, makePair, sigmaHourly } from "../src/carry/math";
 import type { Snapshot } from "../src/carry/snapshot";
 
 const [exchange, premium] = await Promise.all([getExchangeInfo(), getPremiumIndex()]);
@@ -16,6 +16,7 @@ for (const symbol of symbols) {
     pctPositive: stats.pctPositive,
     currentFundingApr: (current.get(symbol) ?? 0) * 24 * 365 * 100,
     hours: stats.hours,
+    sigmaHourly: sigmaHourly(histories[symbol].prices),
     // 120 bins of 6 hours: mean hourly funding rate, oldest first (board mini tapes)
     bins: Array.from({ length: 120 }, (_, b) => {
       const rows = histories[symbol].funding.slice(-720).slice(b * 6, b * 6 + 6);
@@ -31,5 +32,6 @@ for (let i = 0; i < symbols.length; i++) {
   }
 }
 snapshot.pairs.sort((a, b) => b.carryApr - a.carryApr);
-await writeFile("public/snapshot.json", `${JSON.stringify(snapshot)}\n`);
+await writeFile("public/snapshot.json", `${JSON.stringify(snapshot, (_, value) =>
+  typeof value === "number" ? (Number.isFinite(value) ? Number(value.toPrecision(4)) : null) : value)}\n`);
 console.log(`Snapshot: ${symbols.length} symbols, ${snapshot.pairs.length} pairs at ${snapshot.asOf}`);

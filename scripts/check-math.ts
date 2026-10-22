@@ -1,14 +1,35 @@
 import assert from "node:assert/strict";
-import { fundingStats, makePair, pearson, sizeLeg, spreadStats } from "../src/carry/math";
+import { breakEvenDays, ewmaFunding, firstPassageProb, fundingStats, hedgeBeta, makePair, meanReversionHalfLife, pearson, sizeLeg, spreadStats } from "../src/carry/math";
 import { calculateSpreadPnl } from "../src/spread/pnl";
 import { reduceLeg, spreadStatus, type LegState } from "../src/spread/legs";
+import { planSpread } from "../src/spread/plan";
 import type { SpreadRecord } from "../src/spread/store";
 import { attachCardanoWitness } from "../src/session/cardanoCbor";
+import { DEFAULT_FEE_RATES } from "../src/math/fees";
 
 const prices = (values: number[]) => values.map((close, i) => ({ time: i * 3600000, close }));
 const funding = (rate: number) => Array.from({ length: 600 }, (_, i) => ({ time: i * 3600000, rate }));
 assert.ok(Math.abs(fundingStats(funding(0.001)).fundingApr30d - 876) < 1e-9);
 assert.equal(pearson([1, 2, 4], [1, 2, 4]), 1);
+assert.ok(Math.abs(hedgeBeta([2, 4, 8], [1, 2, 4]) - 2) < 1e-9);
+assert.ok(Math.abs(ewmaFunding(funding(0.001)) - 0.001) < 1e-12);
+assert.ok(firstPassageProb(0.1, 0.02, 720, "short") > firstPassageProb(0.1, 0.02, 168, "short"));
+assert.ok(firstPassageProb(0.1, 0.02, 168, "short") < firstPassageProb(0.05, 0.02, 168, "short"));
+assert.ok(firstPassageProb(1e-12, 0.02, 168, "long") > 0.999);
+const ar = Array.from({ length: 100 }, (_, i) => 0.9 ** i);
+assert.ok(Math.abs(meanReversionHalfLife(ar) - Math.LN2 / -Math.log(0.9)) < 1e-9);
+assert.equal(breakEvenDays(0.001, 1, 0), Infinity);
+assert.equal(breakEvenDays(0.001, 1, -0.001), Infinity);
+const filter = { symbol: "A", status: "TRADING", filters: [{ filterType: "MARKET_LOT_SIZE", stepSize: "0.01", minQty: "0.01" }] };
+const plan = planSpread({ short: "A", long: "B", notionalPerLeg: 100, leverage: 2,
+  marks: { A: 100, B: 100 }, filters: { A: filter, B: { ...filter, symbol: "B" } },
+  feeRates: DEFAULT_FEE_RATES, builderFeeBps: 5, availableBalance: 1000, existingPositions: [],
+  hedge: { mode: "beta", beta: 2 }, sigmaHourly: { A: 0.02, B: 0.02 }, hourlyCarry: 0.0001 });
+assert.deepEqual(plan.blockers, []);
+assert.equal(plan.legs.short?.notional, 100);
+assert.equal(plan.legs.long?.notional, 200);
+assert.ok((plan.legs.short?.liqProb7d ?? 0) > 0);
+assert.ok((plan.breakEvenDays ?? 0) > 0);
 const pair = makePair("A", "B", prices(Array.from({ length: 600 }, (_, i) => i + 100)), prices(Array.from({ length: 600 }, (_, i) => i + 200)), funding(0.001), funding(-0.001));
 assert.equal(pair?.short, "A");
 assert.equal(pair?.long, "B");
