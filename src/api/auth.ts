@@ -55,20 +55,28 @@ export function generateApiWalletKeys(): ApiWalletKeys {
   };
 }
 
-// ── In-memory key storage (no localStorage) ──
+// ── Key storage: memory, mirrored to sessionStorage for this browser tab only (never localStorage) ──
+// A reload no longer asks for a new wallet signature; closing the tab forgets the key. The API wallet
+// can place orders but cannot withdraw (withdrawals need the wallet's own signature).
 
+const KEY_STORE = "seesaw:api-wallet";
 let _currentKeys: ApiWalletKeys | null = null;
 
 export function storeApiWalletKeys(keys: ApiWalletKeys): void {
   _currentKeys = keys;
+  try { sessionStorage.setItem(KEY_STORE, JSON.stringify(keys)); } catch { /* storage unavailable: memory only */ }
 }
 
 export function loadApiWalletKeys(): ApiWalletKeys | null {
+  if (!_currentKeys) {
+    try { const saved = sessionStorage.getItem(KEY_STORE); if (saved) _currentKeys = JSON.parse(saved); } catch { /* memory only */ }
+  }
   return _currentKeys;
 }
 
 export function clearApiWalletKeys(): void {
   _currentKeys = null;
+  try { sessionStorage.removeItem(KEY_STORE); } catch { /* memory only */ }
 }
 
 // ── Request Signing ──
