@@ -1,0 +1,74 @@
+.iso.cm {
+  --anatomy-page: #080a0d; --anatomy-card: #080a0d;
+  --anatomy-paper: #080a0d; --anatomy-face: #242a33; --anatomy-top: #252b34;
+  --anatomy-shade-0: #11151b; --anatomy-shade-1: #171d25;
+  --anatomy-shade-2: #202731; --anatomy-shade-3: #2c343f;
+  --anatomy-hi: #b1bac6; --anatomy-mid: #667383; --anatomy-lo: #414b59; --anatomy-faint: #2b333e;
+  --anatomy-lit: #fde819; --anatomy-strong: #ebeff4; --anatomy-text: #afb7c2; --anatomy-muted: #8a95a4;
+  --anatomy-halo: #000; --anatomy-dot: #ebeff4; --anatomy-red: #f84f2f;
+  --cm-ground: #080a0d; --cm-ink: #ebeff4; --cm-signal: #fde819; --cm-oxide: #f84f2f;
+  --cm-slam: 0;
+  --anatomy-mono: var(--font-ui, inherit); /* engraved plates and drums in the site's UI face */
+  width: 100%; min-width: 0; color: var(--cm-ink); font-family: inherit;
+}
+.iso.cm *, .iso.cm *::before, .iso.cm *::after { box-sizing: border-box; }
+.iso.cm .cm-figure { margin: 0; }
+.iso.cm .cm-card {
+  padding: 0; border: 0; box-shadow: none; /* taste-skill-ignore: removes the kit's plate shadow */ overflow: hidden;
+  border-radius: 3px; background: #111418;
+}
+.iso.cm .cm-stage { display:block; padding:0; margin:0; border:0; border-radius:0; width:100%; background:transparent; color:inherit; cursor:grab; touch-action:pan-y; appearance:none; }
+.iso.cm .cm-stage:active { cursor:grabbing; }
+.iso.cm .cm-stage:hover .cm-steel { --anatomy-hi:#c6cfda; }
+.iso.cm .cm-stage:focus-visible { outline:2px solid var(--cm-signal); outline-offset:-6px; }
+.iso.cm .iso-svg { overflow:visible; }
+.iso.cm .cm-base { --anatomy-top:#212832; --anatomy-shade-1:#121820; --anatomy-shade-2:#18202a; --anatomy-shade-3:#242e3a; }
+.iso.cm .cm-steel { --anatomy-top:#3b4553; --anatomy-shade-0:#171d26; --anatomy-shade-1:#222a35; --anatomy-shade-2:#323e4c; --anatomy-shade-3:#475361; }
+.iso.cm .cm-rubber { --anatomy-top:#0d1218; --anatomy-shade-0:#07090d; --anatomy-shade-1:#0c1117; --anatomy-shade-2:#121820; --anatomy-shade-3:#1c242e; --anatomy-hi:#4e5968; }
+.iso.cm .cm-weight { --anatomy-top:#555e69; --anatomy-shade-0:#222934; --anatomy-shade-1:#303945; --anatomy-shade-2:#404b59; --anatomy-shade-3:#596471; }
+.iso.cm .cm-coin { --anatomy-top:#fde819; --anatomy-shade-0:#625b13; --anatomy-shade-1:#978515; --anatomy-shade-2:#c6ae20; --anatomy-shade-3:#e6cb23; --anatomy-hi:#fde819; --anatomy-mid:#a69521; --anatomy-lo:#9d8e20; }
+.iso.cm .cm-well { fill:#030508; }
+.iso.cm .cm-label text { fill:#ebeff4; font-family:var(--font-ui, inherit); letter-spacing:.05em; }
+.iso.cm .cm-label .cm-muted-label { fill:#8793a3; letter-spacing:.025em; }
+.iso.cm .cm-gauge text { fill:var(--anatomy-mid); font-family:var(--font-ui, inherit); }
+.iso.cm .cm-needle { fill:color-mix(in srgb,var(--cm-oxide) calc(var(--cm-slam)*100%),var(--cm-ink)); }
+.iso.cm .cm-needle-hub { fill:#394350; stroke:var(--anatomy-hi); stroke-width:.5; }
+.iso.cm .cm-counter rect { fill:#151c25; stroke:#404b59; stroke-width:.35; }
+.iso.cm .cm-counter text { fill:#d2d9e3; font-family:var(--font-ui, inherit); }
+.iso.cm .cm-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; padding:0 25px 23px; }
+.iso.cm .cm-hint { display:block; color:var(--anatomy-text); font-size:14px; line-height:1.5; margin-bottom:12px; }
+.iso.cm .cm-hint span { opacity:.7; }
+.iso.cm .cm-buttons { display:flex; gap:8px; }
+.iso.cm .cm-toggle, .iso.cm .cm-pause { appearance:none; display:inline-flex; align-items:center; justify-content:center; gap:9px; height:40px; color:var(--cm-ink); font:inherit; font-size:14px; font-weight:600; background:#1b1e23; border:0; border-radius:2px; padding:0 14px; cursor:pointer; transition:background-color 160ms cubic-bezier(0.16,1,0.3,1), transform 160ms cubic-bezier(0.16,1,0.3,1); }
+.iso.cm .cm-toggle:hover,.iso.cm .cm-pause:hover { background:#3a3f47; }
+.iso.cm .cm-toggle:active,.iso.cm .cm-pause:active { transform:scale(0.96); }
+.iso.cm .cm-toggle:focus-visible,.iso.cm .cm-pause:focus-visible,.iso.cm summary:focus-visible { outline:2px solid var(--cm-signal); outline-offset:3px; }
+.iso.cm .cm-toggle svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
+.iso.cm .cm-pause { width:40px; padding:0; }
+.iso.cm .cm-pause svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.3; }
+.iso.cm .cm-readout { text-align:right; font-variant-numeric:tabular-nums; flex:none; padding-bottom:1px; }
+.iso.cm .cm-readout strong { display:block; font-family:var(--font-display, inherit); font-size:56px; font-weight:400; line-height:0.9; letter-spacing:-.02em; color:var(--cm-signal); }
+.iso.cm .cm-readout>span { display:block; color:var(--anatomy-text); font-size:13px; margin-top:6px; }
+.iso.cm .cm-caption { color:var(--anatomy-text); font-size:14px; line-height:1.6; }
+.iso.cm .cm-caption p { margin:10px 0 0; }
+.iso.cm .cm-key { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:14px; font-size:13px; }
+.iso.cm .cm-funding-key { display:inline-flex; align-items:center; gap:7px; color:var(--anatomy-text); }
+.iso.cm .cm-funding-key i { width:8px; height:8px; border-radius:50%; background:var(--cm-signal); }
+.iso.cm .cm-key>span:last-child { margin-left:auto; opacity:.75; }
+.iso.cm .cm-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.iso.cm-unavailable { padding:24px; color:#afb7c2; background:#080a0d; border:1px solid #29313b; font-size:13px; }
+@media(max-width:560px) {
+  .iso.cm .cm-stage { width:140%; margin:5px -20% 4px; }
+  .iso.cm .cm-bottom { padding:0 16px 17px; gap:10px; }
+  .iso.cm .cm-hint { font-size:13px; margin-bottom:10px; }
+  .iso.cm .cm-hint span { display:none; }
+  .iso.cm .cm-toggle { height:40px; font-size:13px; padding:0 10px; gap:6px; }
+  .iso.cm .cm-readout strong { font-size:40px; }
+  .iso.cm .cm-readout>span { font-size:13px; }
+  .iso.cm .cm-key { column-gap:12px; font-size:13px; }
+  .iso.cm .cm-key>span:last-child { width:100%; margin-left:0; }
+  .iso.cm .cm-caption { font-size:14px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .iso.cm *, .iso.cm *::before, .iso.cm *::after { animation:none!important; transition:none!important; }
+}

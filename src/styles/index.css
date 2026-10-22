@@ -211,6 +211,10 @@ a { color: inherit; }
 }
 .section-sub { margin-top: 12px; color: var(--fg-2); max-width: 62ch; }
 
+/* ── How it works (the carry machine) ───────────────── */
+.how-grid { display: grid; gap: 28px; }
+@media (min-width: 1100px) { .how-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr); gap: 48px; align-items: center; } }
+
 /* ── Board (screener table) ──────────────────────────── */
 .board-controls { display: flex; flex-wrap: wrap; gap: 10px; }
 .toggle {

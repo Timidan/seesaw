@@ -10,6 +10,7 @@ import { MiniTape } from "./MiniTape";
 import { Coin, Leg } from "./Coin";
 import { scene } from "./scene";
 import { LiveSpread } from "./LiveSpread";
+import { CarryMachine } from "./anatomy/CarryMachine";
 import { useExecMarkets, useFunding, useSnapshot } from "./data";
 import { base, corr, pct, z } from "./format";
 
@@ -22,12 +23,14 @@ export function Home() {
   const hero = useMemo(() => [...pairs].filter((p) => p.corr >= 0.6 && p.betaCarryApr > 0 && p.carryToRisk != null)
     .sort((a, b) => b.carryToRisk - a.carryToRisk)[0], [pairs]);
   const bins = useMemo(() => Object.fromEntries(Object.entries(snap.data?.symbols ?? {}).map(([k, v]) => [k, v.bins ?? []])), [snap.data]);
+  const heroSym = hero ? snap.data?.symbols[hero.short] : undefined;
   const execLoad = useExecMarkets();
   const exec: ExchangeSymbol[] | null = execLoad.data ?? (execLoad.error ? [] : null);
 
   return (
     <main>
       <Hero hero={hero} total={pairs.filter((p) => p.carryApr > 0).length} asOf={snap.data?.asOf ?? null} error={snap.error} />
+      {hero && heroSym && <How hero={hero} hours={heroSym.hours} paid={Math.round(heroSym.pctPositive * heroSym.hours)} />}
       <LiveSpread />
       <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} bins={bins} />
     </main>
@@ -92,6 +95,22 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
               label={`${hero?.short} hourly funding over 30 days: shorts were paid in ${Math.round((hero?.pctShortPaid ?? 0) * hours)} of ${hours} hours.`} />
           : <div className="skel" style={{ height: 84 }} aria-hidden="true" />}
         <div className="tape-axis"><span>30 days ago</span><span ref={replay} className="tape-replay" aria-hidden="true" /><span>{landed && asOf ? `as of ${asOf.slice(0, 16).replace("T", " ")} UTC` : "now"}</span></div>
+      </div>
+    </section>
+  );
+}
+
+/** The mechanism, as a machine you can push: true numbers for the hero pair, from the snapshot. */
+function How({ hero, hours, paid }: { hero: Pair; hours: number; paid: number }) {
+  return (
+    <section className="section how" id="how" aria-labelledby="how-title">
+      <div className="wrap how-grid">
+        <div>
+          <h2 id="how-title" className="display">Let the crowd pay</h2>
+          <p className="section-sub">Press the beam. With the hedge on, it barely moves. Lift the hedge and press again.</p>
+        </div>
+        <CarryMachine titleId="how-title" short={base(hero.short)} long={base(hero.long)} beta={hero.beta} carryApr={hero.betaCarryApr}
+          hoursPaid={paid} hours={hours} corr={hero.corr} hedgedVolApr={hero.hedgedVolApr} dollarVolApr={hero.dollarVolApr} />
       </div>
     </section>
   );

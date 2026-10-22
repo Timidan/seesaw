@@ -6,3 +6,5 @@ brainstorm/
 .claude/
 *.local
 .taste-skill/
+scripts/anatomy/bundle/
+scripts/anatomy/shots/

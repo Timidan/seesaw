@@ -31,7 +31,7 @@ export default function App() {
         <a className="brand" href="#/" aria-label="Seesaw home"><Mark /><span className="brand-word">Seesaw</span></a>
         <nav className="topnav" aria-label="Main">
           <a href="#board">Spreads</a>
-          <a href="https://docs.strikefinance.org/perpetuals/funding-rates" target="_blank" rel="noreferrer">How Strike funding works</a>
+          <a href="#how">How it works</a>
         </nav>
         <div className="topbar-right">
           <a className="built-on" href="https://strikefinance.org" target="_blank" rel="noreferrer"><span>Built on</span> <StrikeMark height={14} /></a>
@@ -47,7 +47,7 @@ export default function App() {
           </div>
           <div>
             <p className="foot-strike"><a href="https://strikefinance.org" target="_blank" rel="noreferrer"><StrikeMark height={18} /></a></p>
-            <p><a href="https://strikefinance.org" target="_blank" rel="noreferrer">Strike Finance</a> · <a href="https://docs.strikefinance.org/api/builder-codes" target="_blank" rel="noreferrer">Builder codes</a> · <a href="https://testnet.strikefinance.org" target="_blank" rel="noreferrer">Strike testnet app</a></p>
+            <p><a href="https://strikefinance.org" target="_blank" rel="noreferrer">Strike Finance</a> · <a href="https://docs.strikefinance.org/perpetuals/funding-rates" target="_blank" rel="noreferrer">Funding rates</a> · <a href="https://docs.strikefinance.org/api/builder-codes" target="_blank" rel="noreferrer">Builder codes</a> · <a href="https://testnet.strikefinance.org" target="_blank" rel="noreferrer">Strike testnet app</a></p>
           </div>
         </div>
       </footer>
