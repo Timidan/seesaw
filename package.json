@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test": "tsx scripts/check-math.ts",
+    "snapshot": "tsx scripts/snapshot.ts",
     "preview": "vite preview"
   },
   "dependencies": {
