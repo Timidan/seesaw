@@ -3,7 +3,7 @@ import { ColorType, CrosshairMode, LineStyle, createChart, type IChartApi, type 
 
 const base = {
   // Attribution is in the page footer (TradingView link), as the library's licence asks.
-  layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#878d94", fontFamily: "Geist Mono, ui-monospace, monospace", fontSize: 11, attributionLogo: false },
+  layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#878d94", fontFamily: "Geist, ui-sans-serif, sans-serif", fontSize: 12, attributionLogo: false },
   grid: { vertLines: { visible: false }, horzLines: { color: "#1b1e23" } },
   rightPriceScale: { borderVisible: false },
   timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },

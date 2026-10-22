@@ -44,7 +44,7 @@ function SpreadCard({ record }: { record: SpreadRecord }) {
     <article className="panel" style={{ padding: 18 }}>
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
         <h3 style={{ fontSize: 18, fontWeight: 800 }}>short {base(record.short)} / long {base(record.long)}</h3>
-        <span className="mono muted">{status.replace("_", " ")}</span>
+        <span className="muted">{status.replace("_", " ")}</span>
       </header>
       <p className="sub" style={{ color: "var(--fg-3)", fontSize: 13 }}>${record.notionalPerLeg} each leg · {record.leverage}× · opened {new Date(record.openedAt).toUTCString().slice(5, 22)} UTC</p>
       {pnl && (

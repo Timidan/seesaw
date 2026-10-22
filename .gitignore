@@ -5,3 +5,4 @@ dist
 brainstorm/
 .claude/
 *.local
+.taste-skill/

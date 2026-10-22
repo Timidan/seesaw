@@ -125,7 +125,7 @@ const hex = (h: string): [number, number, number] => {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 };
 
-export function StormField({ src, className = "" }: { src: string; className?: string }) {
+export function StormField({ src, poster, className = "" }: { src: string; poster?: string; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -170,7 +170,7 @@ export function StormField({ src, className = "" }: { src: string; className?: s
 
     const reduced = reducedMotion();
     const video = document.createElement("video");
-    Object.assign(video, { muted: true, loop: true, playsInline: true, preload: "auto" });
+    Object.assign(video, { muted: true, loop: true, playsInline: true, preload: "auto", poster: poster ?? "" });
     video.setAttribute("aria-hidden", "true");
     video.setAttribute("muted", "");
     video.setAttribute("playsinline", "");

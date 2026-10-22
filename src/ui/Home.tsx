@@ -54,7 +54,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
 
   return (
     <section className="hero" aria-labelledby="hero-title">
-      <div className="hero-field"><StormField src="/footage/storm-47947-720.mp4" /></div>
+      <div className="hero-field"><StormField src="/footage/storm-47947-720.mp4" poster="/footage/storm-47947-poster.jpg" /></div>
       <div className="hero-scrim" />
       <SceneOverlay shortLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={16} /> short {short} · collects</>} longLabel={<><Coin sym={hero?.long ?? "SOL-USD"} size={16} /> long {long} · hedge</>} crowdLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={14} /> {short} longs pay every hour</>} shortSym={short} />
       <div className="hero-body">
@@ -150,9 +150,9 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                 <th scope="col" className="hide-sm">30 days, net funding</th>
                 {head("betaCarryApr", "A year")}
                 {head("carryToRisk", "Per unit of risk")}
-                {head("ewmaCarryApr", "Paying now", "hide-sm")}
-                {head("corr", "Moves together", "hide-sm")}
-                <th scope="col"><span className="sr-only">Execution</span></th>
+                {head("ewmaCarryApr", "Paying now", "hide-md")}
+                {head("corr", "Moves together", "hide-md")}
+                <th scope="col" className="hide-xs"><span className="sr-only">Execution</span></th>
               </tr>
             </thead>
             <tbody>
@@ -172,9 +172,9 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                     : null}</td>
                   <td><span className="carry">{pct(p.betaCarryApr)}</span></td>
                   <td><span className="num" style={{ fontWeight: 600 }}>{p.carryToRisk != null ? p.carryToRisk.toFixed(2) : "–"}</span></td>
-                  <td className="hide-sm" style={{ color: p.ewmaCarryApr < 0 ? "var(--oxide)" : undefined }}>{pct(p.ewmaCarryApr)}</td>
-                  <td className="hide-sm"><span className="corrbar"><span className="num">{corr(p.corr)}</span><span className="paidbar-track" aria-hidden><span className="paidbar-fill" style={{ width: `${Math.max(0, p.corr) * 100}%`, background: "var(--fg-3)" }} /></span></span></td>
-                  <td>{tradable(p) ? <span className="tag"><i />testnet</span> : <span className="muted mono">mainnet</span>}</td>
+                  <td className="hide-md" style={{ color: p.ewmaCarryApr < 0 ? "var(--oxide)" : undefined }}>{pct(p.ewmaCarryApr)}</td>
+                  <td className="hide-md"><span className="corrbar"><span className="num">{corr(p.corr)}</span><span className="paidbar-track" aria-hidden><span className="paidbar-fill" style={{ width: `${Math.max(0, p.corr) * 100}%`, background: "var(--fg-3)" }} /></span></span></td>
+                  <td className="hide-xs">{tradable(p) ? <span className="tag"><i />testnet</span> : <span className="muted">mainnet</span>}</td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
@@ -184,7 +184,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
           </table>
         </div>
         <div className="board-more">
-          <span className="mono">{rows.length} of {pairs.length} pairs</span>
+          <span className="num">{rows.length} of {pairs.length} pairs</span>
           {rows.length > limit && <button type="button" className="btn btn-line btn-sm" onClick={() => setLimit(rows.length)}>Show all {rows.length}</button>}
         </div>
       </div>

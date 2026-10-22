@@ -22,7 +22,7 @@ export function LiveSpread() {
             <h2 id="live-title" className="display">Live right now</h2>
             <p className="section-sub">One real spread on Strike testnet, opened with Seesaw. Read from Strike's public API every 15 seconds.</p>
           </div>
-          <a className="link mono" href={proof} target="_blank" rel="noreferrer">Check it on Strike's API ↗</a>
+          <a className="link" href={proof} target="_blank" rel="noreferrer">Check it on Strike's API ↗</a>
         </div>
         {live.error && <p className="notice err" role="alert"><b>Could not read the demo account.</b> {live.error}</p>}
         {!live.updatedAt && !live.error && <div className="skel" style={{ height: 160 }} />}
