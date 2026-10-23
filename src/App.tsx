@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Home } from "./ui/Home";
+import { AppHome, Home } from "./ui/Home";
 import { SpreadPage } from "./ui/SpreadPage";
 import { Mark } from "./ui/bits";
 import { StrikeMark } from "./ui/Coin";
 import { WalletButton } from "./ui/WalletButton";
 import { base } from "./ui/format";
 
-type Route = { page: "home" } | { page: "spread"; short: string; long: string };
+type Route = { page: "home" } | { page: "app" } | { page: "spread"; short: string; long: string };
 
 const homeTitle = document.title;
 
 function parse(hash: string): Route {
+  if (hash === "#/app" || hash === "#board") return { page: "app" };
   const m = hash.match(/^#\/spread\/([A-Z0-9]+-USD)\/([A-Z0-9]+-USD)$/);
   return m ? { page: "spread", short: m[1], long: m[2] } : { page: "home" };
 }
@@ -18,17 +19,19 @@ function parse(hash: string): Route {
 export default function App() {
   const [route, setRoute] = useState<Route>(() => parse(location.hash));
   useEffect(() => {
-    const on = () => {
-      const r = parse(location.hash);
-      setRoute(r);
-      if (r.page === "spread") window.scrollTo({ top: 0 });
-      else if (location.hash.length > 2 && !location.hash.startsWith("#/")) document.getElementById(location.hash.slice(1))?.scrollIntoView();
-    };
+    const on = () => setRoute(parse(location.hash));
     window.addEventListener("hashchange", on);
     return () => window.removeEventListener("hashchange", on);
   }, []);
   useEffect(() => {
-    document.title = route.page === "spread" ? `short ${base(route.short)} / long ${base(route.long)} · Seesaw` : homeTitle;
+    // after the page renders: an in-page anchor (#how) scrolls to its section, a new page starts at the top
+    const id = route.page === "home" && location.hash.length > 2 && !location.hash.startsWith("#/") ? location.hash.slice(1) : "";
+    window.scrollTo({ top: 0 });
+    let tries = 0, timer = 0;
+    const toAnchor = () => { const el = id && document.getElementById(id); if (el) el.scrollIntoView(); else if (id && tries++ < 20) timer = window.setTimeout(toAnchor, 100); };
+    toAnchor(); // sections that wait for data appear a moment after the page
+    document.title = route.page === "spread" ? `short ${base(route.short)} / long ${base(route.long)} · Seesaw` : route.page === "app" ? "Spreads · Seesaw" : homeTitle;
+    return () => window.clearTimeout(timer);
   }, [route]);
 
   return (
@@ -37,7 +40,7 @@ export default function App() {
       <header className="topbar">
         <a className="brand" href="#/" aria-label="Seesaw home"><Mark /><span className="brand-word">Seesaw</span></a>
         <nav className="topnav" aria-label="Main">
-          <a href="#board">Spreads</a>
+          <a href="#/app">Spreads</a>
           <a href="#how">How it works</a>
         </nav>
         <div className="topbar-right">
@@ -45,7 +48,7 @@ export default function App() {
           <WalletButton />
         </div>
       </header>
-      <div id="content" tabIndex={-1} style={{ outline: "none" }}>{route.page === "home" ? <Home /> : <SpreadPage short={route.short} long={route.long} />}</div>
+      <div id="content" tabIndex={-1} style={{ outline: "none" }}>{route.page === "home" ? <Home /> : route.page === "app" ? <AppHome /> : <SpreadPage short={route.short} long={route.long} />}</div>
       <footer className="foot">
         <div className="wrap foot-grid">
           <div>

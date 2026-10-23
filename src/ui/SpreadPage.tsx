@@ -50,7 +50,7 @@ export function SpreadPage({ short, long }: { short: string; long: string }) {
 
   return (
     <main className="wrap spread-top">
-      <p className="crumb"><a href="#board">← The board</a></p>
+      <p className="crumb"><a href="#/app">← The board</a></p>
       <h1 className="spread-title">
         <span className="verb">short </span><Coin sym={short} size={58} className="title-coin" />{S}<span className="verb"> / long </span><Coin sym={long} size={58} className="title-coin" />{L}
       </h1>

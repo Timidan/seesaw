@@ -10,6 +10,7 @@ import { MiniTape } from "./MiniTape";
 import { Coin, Leg } from "./Coin";
 import { scene } from "./scene";
 import { LiveSpread } from "./LiveSpread";
+import { MySpreads } from "./MySpreads";
 import { CarryMachine } from "./anatomy/CarryMachine";
 import { useExecMarkets, useFunding, useSnapshot } from "./data";
 import { base, corr, pct, pickHero, z } from "./format";
@@ -21,15 +22,27 @@ export function Home() {
   const pairs = snap.data?.pairs ?? [];
   // Hero = best risk-adjusted spread among pairs that move together.
   const hero = useMemo(() => pickHero(pairs), [pairs]);
-  const bins = useMemo(() => Object.fromEntries(Object.entries(snap.data?.symbols ?? {}).map(([k, v]) => [k, v.bins ?? []])), [snap.data]);
   const heroSym = hero ? snap.data?.symbols[hero.short] : undefined;
-  const execLoad = useExecMarkets();
-  const exec: ExchangeSymbol[] | null = execLoad.data ?? (execLoad.error ? [] : null);
 
   return (
     <main>
       <Hero hero={hero} asOf={snap.data?.asOf ?? null} error={snap.error} />
       {hero && heroSym && <How hero={hero} hours={heroSym.hours} paid={Math.round(heroSym.pctPositive * heroSym.hours)} />}
+    </main>
+  );
+}
+
+/** The app: your spreads (once a wallet is connected) above every ranked pair. */
+export function AppHome() {
+  const snap = useSnapshot();
+  const pairs = snap.data?.pairs ?? [];
+  const bins = useMemo(() => Object.fromEntries(Object.entries(snap.data?.symbols ?? {}).map(([k, v]) => [k, v.bins ?? []])), [snap.data]);
+  const execLoad = useExecMarkets();
+  const exec: ExchangeSymbol[] | null = execLoad.data ?? (execLoad.error ? [] : null);
+
+  return (
+    <main>
+      <div className="wrap"><MySpreads /></div>
       <LiveSpread />
       <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} bins={bins} />
     </main>
@@ -74,7 +87,7 @@ function Hero({ hero, asOf, error }: { hero?: Pair; asOf: string | null; error?:
               </div>
             )}
             <div className="hero-actions">
-              <a className="btn btn-strike" href="#board">Open app</a>
+              <a className="btn btn-strike" href="#/app">Open app</a>
             </div>
           </div>
         </div>

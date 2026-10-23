@@ -21,7 +21,7 @@ async function start(root: HTMLElement) {
 
   mountScrollWorld(root, {
     brand: { name: "Seesaw", href: "/" },
-    cta: { label: "Open app", href: "/#board" },
+    cta: { label: "Open app", href: "/#/app" },
     nav: false,
     atmosphere: false,
     hint: "Scroll to fly in",
@@ -53,7 +53,7 @@ async function start(root: HTMLElement) {
         html: `<span class="st-big">${pct(hero.betaCarryApr)}</span><span class="st-big-label">a year in rent at the last 30 days' rate, ${s} / ${l}, hedged. Past rent is no promise.</span>`,
         title: "One click. Both orders.",
         body: "Pick a spread and Seesaw sends both orders to Strike together, then tracks your rent and price moves as one number. Strike testnet for now.",
-        cta: { primary: { label: "Open app", href: "/#board" }, secondary: { label: `See ${s} / ${l}`, href: `/#/spread/${hero.short}/${hero.long}` } } },
+        cta: { primary: { label: "Open app", href: "/#/app" }, secondary: { label: `See ${s} / ${l}`, href: `/#/spread/${hero.short}/${hero.long}` } } },
     ],
   });
   // where the camera eases in, per scene (source-image coordinates), and which scene has rain
