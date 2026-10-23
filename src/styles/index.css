@@ -262,6 +262,12 @@ a { color: inherit; }
 
 .spread-grid { margin-top: 40px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
 .panel { background: var(--ink-1); border-radius: 3px; }
+/* App page: the account at the top */
+.acct { padding-top: clamp(40px, 6vw, 72px); }
+.acct-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.acct .stats { margin-top: 22px; }
+.stat .acct-addr { font-family: var(--font-mono); font-size: 18px; }
+.acct-deposit { margin-top: 16px; max-width: 440px; padding: 18px 20px; background: var(--ink-1); border-radius: 3px; }
 .chart-block + .chart-block { margin-top: 44px; }
 
 .chart-block p.note { margin-top: 4px; color: var(--fg-3); font-size: 14px; max-width: 70ch; }

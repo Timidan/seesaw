@@ -11,9 +11,13 @@ import { Coin, Leg } from "./Coin";
 import { scene } from "./scene";
 import { LiveSpread } from "./LiveSpread";
 import { MySpreads } from "./MySpreads";
+import { DepositInline } from "./DepositInline";
+import { openWalletModal } from "./WalletButton";
+import { useSpreadsCtx } from "./spreadsContext";
+import { useSession } from "../session/SessionProvider";
 import { CarryMachine } from "./anatomy/CarryMachine";
 import { useExecMarkets, useFunding, useSnapshot } from "./data";
-import { base, corr, pct, pickHero, z } from "./format";
+import { base, corr, pct, pickHero, shortId, usd, z } from "./format";
 
 export const spreadHref = (p: { short: string; long: string }) => `#/spread/${p.short}/${p.long}`;
 
@@ -42,10 +46,37 @@ export function AppHome() {
 
   return (
     <main>
-      <div className="wrap"><MySpreads /></div>
+      <div className="wrap"><Account /><MySpreads /></div>
       <LiveSpread />
       <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} bins={bins} />
     </main>
+  );
+}
+
+/** Top of the app: the connected account at a glance, or the way to connect one. */
+function Account() {
+  const session = useSession();
+  const { spreads } = useSpreadsCtx();
+  const [depositing, setDepositing] = useState(false);
+  const c = session.connection, a = session.account;
+  const money = (v?: string) => (a && v != null ? usd(Number(v)) : "–");
+  return (
+    <section className="acct" aria-labelledby="acct-title">
+      <div className="acct-head">
+        <h1 id="acct-title" className="display">Your account</h1>
+        {c ? <button type="button" className="btn btn-line" aria-expanded={depositing} onClick={() => setDepositing((v) => !v)}>Deposit</button>
+          : <button type="button" className="btn btn-strike" onClick={openWalletModal}>Connect wallet</button>}
+      </div>
+      {c && (
+        <dl className="stats">
+          <div className="stat"><dt>Wallet</dt><dd className="acct-addr" title={c.address}>{shortId(c.address)}</dd></div>
+          <div className="stat"><dt>Balance</dt><dd>{money(a?.wallet_balance)}</dd></div>
+          <div className="stat"><dt>Available</dt><dd className="hot">{money(a?.available_balance)}</dd></div>
+          <div className="stat"><dt>Open spreads</dt><dd>{spreads.filter((r) => !r.closedAt).length}</dd></div>
+        </dl>
+      )}
+      {c && depositing && session.wallet && <div className="acct-deposit"><DepositInline wallet={session.wallet} /></div>}
+    </section>
   );
 }
 
@@ -178,7 +209,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                 {head("carryToRisk", "Per unit of risk")}
                 {head("ewmaCarryApr", "Paying now", "hide-md")}
                 {head("corr", "Moves together", "hide-md")}
-                <th scope="col" className="hide-xs"><span className="sr-only">Tradable on testnet</span></th>
+                <th scope="col" className="hide-xs"><span className="sr-only">Open on Strike testnet</span></th>
               </tr>
             </thead>
             <tbody>
@@ -200,7 +231,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                   <td><span className="num" style={{ fontWeight: 600 }}>{p.carryToRisk != null ? p.carryToRisk.toFixed(2) : "–"}</span></td>
                   <td className="hide-md" style={{ color: p.ewmaCarryApr < 0 ? "var(--oxide)" : undefined }}>{pct(p.ewmaCarryApr)}</td>
                   <td className="hide-md"><span className="corrbar"><span className="num">{corr(p.corr)}</span><span className="paidbar-track" aria-hidden><span className="paidbar-fill" style={{ width: `${Math.max(0, p.corr) * 100}%`, background: "var(--fg-3)" }} /></span></span></td>
-                  <td className="hide-xs">{tradable(p) && <span className="tag"><i />testnet</span>}</td>
+                  <td className="hide-xs">{tradable(p) && <a className="btn btn-strike btn-sm" href={spreadHref(p)} onClick={(e) => e.stopPropagation()} aria-label={`Open short ${base(p.short)} / long ${base(p.long)} on Strike testnet`}>Open</a>}</td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
