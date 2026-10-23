@@ -31,7 +31,7 @@ Orders go to **Strike testnet**. Two wallet routes have been tested end to end:
 | Rabby or MetaMask (EVM) | Sepolia | [Circle faucet](https://faucet.circle.com) for USDC, plus a little Sepolia ETH for gas | USDC |
 
 1. Open the **short BTC / long ETH** spread. Strike testnet's ADA order book is empty, so BTC and ETH are the markets whose testnet books fill near the mark price. The board marks them with a `testnet` tag.
-2. **Connect a wallet** and sign one message. It approves the builder code `Seesaw` and creates a trading key for this browser tab. That key can place orders but cannot withdraw.
+2. **Connect a wallet** with the button in the header (Lace, Rabby, Phantom and other installed wallets are listed) and sign one message. It approves the builder code `Seesaw` and creates a trading key for this browser tab. That key can place orders but cannot withdraw.
 3. **Deposit from the ticket** if the balance is short. The smallest BTC/ETH spread ($105 BTC / $69 ETH) needs about $87 of margin at 2×. 500 test ADA credited $105.69 during testing; the ticket quotes the exact amount before you sign.
 4. **Open the spread.** Both orders go out in one batch request, and each leg reports its own fill.
 5. **Close both legs** from the spread card under "Your spreads".
