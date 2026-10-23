@@ -80,7 +80,7 @@ function Connect() {
         {CHAINS.map((ch) => <button key={ch.id} type="button" aria-pressed={c.chain === ch.id} onClick={() => c.setChain(ch.id)}>{ch.label}</button>)}
       </div>
       <div className="legs">
-        {c.wallets.length === 0 && <p className="notice">No {c.chain} wallet found in this browser. Install one, or pick another chain.</p>}
+        {c.wallets.length === 0 && <p className="notice">No {c.chain[0].toUpperCase() + c.chain.slice(1)} wallet found in this browser. Install one, or pick another chain.</p>}
         {c.wallets.map((w) => (
           <button key={w.id} type="button" className="btn btn-line" style={{ marginTop: 0, width: "100%", justifyContent: "flex-start" }}
             disabled={!!c.connectingWalletId} onClick={() => c.connect(w.id)}>
@@ -186,7 +186,7 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
         <dl className="kv">
           {(["short", "long"] as SpreadSide[]).map((s) => {
             const leg = plan.legs[s];
-            return <div key={s}><dt><Coin sym={s === "short" ? short : long} size={16} /> {s === "short" ? "Sell" : "Buy"} {base(s === "short" ? short : long)} <span className="muted">({usd(leg?.notional ?? 0, 0)})</span></dt><dd>{leg ? `${leg.size} · liq ${leg.liquidationPrice > 0 ? usd(leg.liquidationPrice, leg.liquidationPrice < 10 ? 4 : 2) : "none"}${leg.liqProb30d != null ? ` · ${(leg.liqProb30d * 100).toFixed(leg.liqProb30d < 0.1 ? 1 : 0)}% in 30 d` : ""}` : "…"}</dd></div>;
+            return <div key={s}><dt><Coin sym={s === "short" ? short : long} size={16} /> {s === "short" ? "Sell" : "Buy"} {base(s === "short" ? short : long)} <span className="muted">({usd(leg?.notional ?? 0, 0)})</span></dt><dd>{leg ? `${leg.size} · liq\u00a0${leg.liquidationPrice > 0 ? usd(leg.liquidationPrice, leg.liquidationPrice < 10 ? 4 : 2) : "none"}${leg.liqProb30d != null ? ` · ${(leg.liqProb30d * 100).toFixed(leg.liqProb30d < 0.1 ? 1 : 0)}%\u00a0in\u00a030\u00a0d` : ""}` : "…"}</dd></div>;
           })}
           <div><dt>Margin needed</dt><dd>{usd(plan.requiredMargin)}</dd></div>
           <div><dt>Fees: Strike + Seesaw ({builderFeeBps} bps)</dt><dd>{usd(plan.estimatedTakerFees)} + {usd(plan.estimatedBuilderFees)}</dd></div>
@@ -231,7 +231,7 @@ export function LegBoard({ record }: { record: SpreadRecord }) {
               <span className="leg-dot" aria-hidden />
               <span>
                 <span className="what"><Coin sym={s === "short" ? record.short : record.long} size={16} /> {s === "short" ? "Sell" : "Buy"} {base(s === "short" ? record.short : record.long)}</span>
-                <span className="meta" style={{ display: "block" }}>{leg.orderId ? `order ${shortId(leg.orderId)}` : shortId(leg.clientId)}{leg.avgPrice > 0 ? ` · ${leg.filledSize} @ ${leg.avgPrice}` : ""}</span>
+                <span className="meta" style={{ display: "block" }}>{leg.orderId ? `order ${shortId(leg.orderId)}` : shortId(leg.clientId)}{leg.avgPrice > 0 ? ` · ${leg.filledSize} @ ${+leg.avgPrice.toPrecision(8)}` : ""}</span>
               </span>
               <span className="state">{word[leg.status] ?? leg.status}</span>
             </div>

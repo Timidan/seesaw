@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Pair } from "../carry/math";
 import type { ExchangeSymbol } from "../carry/data";
 import { isTradable } from "../carry/execMarkets";
@@ -40,8 +40,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
   const funding = useFunding(hero?.short ?? null);
   const [count, setCount] = useState({ received: 0, printed: 0 });
   const [landed, setLanded] = useState(false);
-  const replay = useRef<HTMLSpanElement>(null);
-  const feed = useHeroDirector(funding.data, hero?.z ?? 0, replay, hero?.corr ?? 0.8);
+  const feed = useHeroDirector(funding.data, hero?.z ?? 0);
   const printed = funding.data ? count.printed >= funding.data.length : false;
   // The number must never stay hidden: show it if the tape cannot load or takes too long.
   const [late, setLate] = useState(false);
@@ -58,7 +57,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-field"><StormField src="/footage/storm-47947-720.mp4" poster="/footage/storm-47947-poster.jpg" /></div>
       <div className="hero-scrim" />
-      <SceneOverlay shortLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={16} /> short {short} · collects</>} longLabel={<><Coin sym={hero?.long ?? "SOL-USD"} size={16} /> long {long} · hedge</>} crowdLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={14} /> {short} longs pay every hour</>} shortSym={short} />
+      <SceneOverlay shortLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={16} /> short {short} · collects</>} longLabel={<><Coin sym={hero?.long ?? "SOL-USD"} size={16} /> long {long} · hedge</>} />
       <div className="hero-body">
         <div className="wrap">
           <div className="hero-copy">
@@ -71,7 +70,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
             {hero && (
               <div className="figure">
                 <KineticNumber className="figure-num" value={pct(hero.betaCarryApr)} play={reveal} onImpact={() => setLanded(true)} />
-                <p className="figure-label"><b>a year, short {short} / long {long}</b>30-day funding · hedged 1 : {hero.beta.toFixed(2)} · moves together {corr(hero.corr)}</p>
+                <p className="figure-label"><b>a year, short {short} / long {long}</b>30-day funding, hedged</p>
               </div>
             )}
             <div className="hero-actions" style={{ opacity: hero ? 1 : 0.4 }}>
@@ -93,7 +92,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
           ? <FundingTape points={funding.data} side="short" height={84} print flashes follow onProgress={onProgress}
               label={`${hero?.short} hourly funding over 30 days: shorts were paid in ${Math.round((hero?.pctShortPaid ?? 0) * hours)} of ${hours} hours.`} />
           : <div className="skel" style={{ height: 84 }} aria-hidden="true" />}
-        <div className="tape-axis"><span>30 days ago</span><span ref={replay} className="tape-replay" aria-hidden="true" /><span>{landed && asOf ? `as of ${asOf.slice(0, 16).replace("T", " ")} UTC` : "now"}</span></div>
+        <div className="tape-axis"><span>30 days ago</span><span>{landed && asOf ? `as of ${asOf.slice(0, 16).replace("T", " ")} UTC` : "now"}</span></div>
       </div>
     </section>
   );
@@ -171,7 +170,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                 {head("carryToRisk", "Per unit of risk")}
                 {head("ewmaCarryApr", "Paying now", "hide-md")}
                 {head("corr", "Moves together", "hide-md")}
-                <th scope="col" className="hide-xs"><span className="sr-only">Execution</span></th>
+                <th scope="col" className="hide-xs"><span className="sr-only">Tradable on testnet</span></th>
               </tr>
             </thead>
             <tbody>
@@ -193,7 +192,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                   <td><span className="num" style={{ fontWeight: 600 }}>{p.carryToRisk != null ? p.carryToRisk.toFixed(2) : "–"}</span></td>
                   <td className="hide-md" style={{ color: p.ewmaCarryApr < 0 ? "var(--oxide)" : undefined }}>{pct(p.ewmaCarryApr)}</td>
                   <td className="hide-md"><span className="corrbar"><span className="num">{corr(p.corr)}</span><span className="paidbar-track" aria-hidden><span className="paidbar-fill" style={{ width: `${Math.max(0, p.corr) * 100}%`, background: "var(--fg-3)" }} /></span></span></td>
-                  <td className="hide-xs">{tradable(p) ? <span className="tag"><i />testnet</span> : <span className="muted">mainnet</span>}</td>
+                  <td className="hide-xs">{tradable(p) && <span className="tag"><i />testnet</span>}</td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
@@ -203,7 +202,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
           </table>
         </div>
         <div className="board-more">
-          <span className="num">{rows.length} of {pairs.length} pairs</span>
+          <span className="num">{Math.min(limit, rows.length)} of {rows.length} {rows.length === 1 ? "pair" : "pairs"}{hedged ? " that move together" : ""}</span>
           {rows.length > limit && <button type="button" className="btn btn-line btn-sm" onClick={() => setLimit(rows.length)}>Show all {rows.length}</button>}
         </div>
       </div>

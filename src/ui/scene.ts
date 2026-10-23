@@ -16,17 +16,9 @@ export const scene = {
   replayIndex: -1, // hour being replayed on the tape (-1 = none)
   introDone: false,
   paused: false,   // user paused motion (WCAG 2.2.2): storm, sparks and replay hold still
-  // Interaction: push the short leg's price and watch the hedged spread. tilt follows a spring once `ready`.
-  ready: false,    // intro finished; the spring controller owns tilt from here
-  shock: 0,        // price move of the short leg, as a fraction (0.1 = +10%)
-  hedged: true,    // hedge leg on the beam
-  corr: 0.8,       // correlation of the two legs (from the snapshot)
+  ready: false,    // intro finished; a spring settles the tilt from here
   baseTilt: 0,     // resting tilt from the spread's stretch (z-score)
 };
-
-/** P&L of the spread per $1 of the short leg when the short leg's price moves by s.
- *  With a beta hedge the long leg is expected to move corr·σB/σA·s, so the spread keeps (1 − corr²) of the move. */
-export const spreadPnl = (s: number) => -s * (scene.hedged ? 1 - scene.corr * scene.corr : 1);
 
 /** Scene geometry in CSS pixels for a hero of size w×h (y measured from the top). */
 export function layout(w: number, h: number) {

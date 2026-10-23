@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ConnectedWallet } from "../api/wallets";
-import { EVM_DEPOSIT_CHAIN } from "../api/config";
+import { API_BASE_URL, EVM_DEPOSIT_CHAIN } from "../api/config";
 import { useDeposit } from "../session/useDeposit";
 import { useSession } from "../session/SessionProvider";
 import { shortId, usd } from "./format";
@@ -29,6 +29,9 @@ export function DepositInline({ wallet }: { wallet: ConnectedWallet }) {
   const dec = assets.find((a) => a.symbol === asset)?.decimals ?? 6;
   const atomic = toAtomic(amount, dec);
   const busy = d.status === "quoting" || d.status === "submitting";
+  // A quote is for one amount; editing the amount after quoting must not reuse it.
+  const [quotedFor, setQuotedFor] = useState("");
+  const stale = d.status === "ready" && quotedFor !== `${atomic}:${asset}`;
   const { refreshAccount } = useSession();
   // Strike credits after the chain confirms; re-read the balance every 10 s (up to 5 min) in case the stream misses it.
   useEffect(() => {
@@ -40,9 +43,12 @@ export function DepositInline({ wallet }: { wallet: ConnectedWallet }) {
 
   return (
     <div className="deposit">
-      <p className="sub" style={{ color: "var(--fg-2)" }}>Add funds to this Strike account from your {wallet.chain} wallet.</p>
+      <p className="sub" style={{ color: "var(--fg-2)" }}>Add funds to this Strike account from your {wallet.chain[0].toUpperCase() + wallet.chain.slice(1)} wallet.</p>
       {wallet.chain === "ethereum" && EVM_DEPOSIT_CHAIN.id === "0xaa36a7" && (
         <p className="sub">Testnet takes USDC on Sepolia. Get free test USDC at <a className="link" href="https://faucet.circle.com" target="_blank" rel="noreferrer">faucet.circle.com</a>; your wallet switches to Sepolia when you deposit.</p>
+      )}
+      {wallet.chain === "cardano" && API_BASE_URL.includes("testnet") && (
+        <p className="sub">Testnet takes ADA on Cardano Preprod. Get free test ADA from the <a className="link" href="https://docs.cardano.org/cardano-testnets/tools/faucet" target="_blank" rel="noreferrer">Cardano testnet faucet</a>.</p>
       )}
       <div className="deposit-row">
         {assets.length > 1 && (
@@ -53,12 +59,12 @@ export function DepositInline({ wallet }: { wallet: ConnectedWallet }) {
         <label className="sr-only" htmlFor="dep-amt">Amount in {asset}</label>
         <input id="dep-amt" className="input" inputMode="decimal" placeholder={`Amount in ${asset}`} value={amount} onChange={(e) => setAmount(e.target.value)} />
       </div>
-      {d.status !== "ready" && d.status !== "pending" && (
-        <button type="button" className="btn btn-line" disabled={!atomic || busy} onClick={() => d.prepare(asset, atomic)}>
+      {(d.status !== "ready" || stale) && d.status !== "pending" && (
+        <button type="button" className="btn btn-line" disabled={!atomic || busy} onClick={() => { setQuotedFor(`${atomic}:${asset}`); d.prepare(asset, atomic); }}>
           {d.status === "quoting" ? "Getting a quote…" : "Get deposit quote"}
         </button>
       )}
-      {d.quote && d.status === "ready" && (
+      {d.quote && d.status === "ready" && !stale && (
         <>
           <p className="notice">Credits about <b>{usd(Number(d.quote.quote.usd_value))}</b> after {d.quote.confirmations_required} confirmations. Strike's minimum is $5.</p>
           <button type="button" className="btn btn-strike" disabled={busy} onClick={() => d.submit()}>Deposit {amount} {asset} with your wallet</button>

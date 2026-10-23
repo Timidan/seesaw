@@ -71,7 +71,7 @@ export function detectInstalledWallets(): WalletInfo[] {
     if (ns?.enable) {
       wallets.push({
         id,
-        name: ns.name || id,
+        name: (ns.name || id).replace(/^./, (c: string) => c.toUpperCase()), // Lace reports "lace"
         chain: "cardano",
         icon: ns.icon,
         installed: true,

@@ -3,8 +3,11 @@ import { Home } from "./ui/Home";
 import { SpreadPage } from "./ui/SpreadPage";
 import { Mark } from "./ui/bits";
 import { StrikeMark } from "./ui/Coin";
+import { base } from "./ui/format";
 
 type Route = { page: "home" } | { page: "spread"; short: string; long: string };
+
+const homeTitle = document.title;
 
 function parse(hash: string): Route {
   const m = hash.match(/^#\/spread\/([A-Z0-9]+-USD)\/([A-Z0-9]+-USD)$/);
@@ -23,6 +26,9 @@ export default function App() {
     window.addEventListener("hashchange", on);
     return () => window.removeEventListener("hashchange", on);
   }, []);
+  useEffect(() => {
+    document.title = route.page === "spread" ? `short ${base(route.short)} / long ${base(route.long)} · Seesaw` : homeTitle;
+  }, [route]);
 
   return (
     <>
@@ -43,6 +49,7 @@ export default function App() {
         <div className="wrap foot-grid">
           <div>
             <p>Seesaw ranks Strike market pairs by the funding each leg paid over the last 30 days (Strike mainnet public data, hourly), and opens both legs through Strike's builder codes. Past funding is not a forecast. Two orders are sent together but fill separately.</p>
+            <p>Seesaw has no backend and no analytics. The trading key it creates stays in this browser tab, and orders go straight from your browser to Strike.</p>
             <p>Built for the Strike Hackathon, October 2026. Storm footage: Mixkit free licence. Charts: <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView Lightweight Charts™</a>.</p>
           </div>
           <div>

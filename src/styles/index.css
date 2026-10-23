@@ -155,7 +155,6 @@ a { color: inherit; }
 .tape-count { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--fg-2); }
 .tape-count .hit { color: var(--strike); font-weight: 600; }
 .tape-axis { display: flex; justify-content: space-between; gap: 16px; margin-top: 8px; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--fg-3); }
-.tape-replay { color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .tape-legend { display: flex; gap: 18px; font-size: 13px; color: var(--fg-3); }
 .tape-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .tape-legend i { display: inline-block; width: 3px; height: 12px; }
@@ -170,21 +169,6 @@ a { color: inherit; }
 
 /* ── Scene overlay (sparks, labels riding the beam) ─── */
 .scene-overlay { position: absolute; inset: 0; pointer-events: none; }
-.scene-hit { position: absolute; pointer-events: auto; cursor: ns-resize; touch-action: none; }
-.scene-readout {
-  position: absolute; left: 0; top: 0; white-space: nowrap; opacity: 0; transition: opacity 240ms var(--ease), color 160ms var(--ease);
-  font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 500; color: var(--fg); padding: 7px 11px; background: var(--ink-2);
-}
-.scene-readout[data-tone="hot"] { color: var(--oxide); }
-.scene-controls { position: absolute; left: 0; top: 0; z-index: 1; display: flex; gap: 8px; opacity: 0; transition: opacity 300ms var(--ease); }
-.scene-controls button {
-  min-height: 36px; padding: 0 13px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--fg);
-  background: var(--ink-2); border: 0; border-radius: 2px;
-  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
-}
-.scene-controls button:hover { background: var(--rule-strong); }
-.scene-controls button:active { transform: scale(0.96); }
-.scene-controls button[aria-pressed="true"] { color: var(--ink-0); background: var(--oxide); }
 .pause {
   position: absolute; right: var(--gutter); top: 76px; z-index: 1; min-height: 32px; padding: 0 10px; cursor: pointer;
   font-size: 13px; color: var(--fg-2); background: var(--ink-1); border: 0;
@@ -199,7 +183,6 @@ a { color: inherit; }
   background: var(--ink-2);
 }
 .scene-label.hot { color: var(--ink-0); background: var(--strike); }
-.scene-label.dim { color: var(--fg-2); background: transparent; }
 
 
 /* ── Sections ────────────────────────────────────────── */

@@ -3,7 +3,7 @@ import { Solid } from '../../iso/react/draw';
 import { WIDTH, HEIGHT, LEFT, makeGeometry, returnSpring } from './geometry';
 import { BaseArt, Parts, WeightLabel, Coin, CoinStack, Instruments, HopperLabel, FundingWell } from './art';
 import { useMachine } from './live';
-import { apr, validSnapshot, type CarryMachineProps } from './model';
+import { validSnapshot, type CarryMachineProps } from './model';
 import '../../iso/iso.css';
 import './carry-machine.css';
 
@@ -65,7 +65,7 @@ function Machine({ data }: {data: CarryMachineProps & { titleId?: string }}) {
           <div className="cm-controls">
             <span id={`${id}-hint`} className="cm-hint">Press or drag the beam <span>· Space works too</span></span>
             <div className="cm-buttons">
-              <button type="button" className="cm-toggle" onClick={live.toggle} aria-describedby={`${id}-state`}>
+              <button type="button" className="cm-toggle" onClick={live.toggle}>
                 <svg viewBox="0 0 18 18" aria-hidden="true"><path d={live.lifted?'M9 3v11m-4-4 4 4 4-4M3 16h12':'M9 14V3M5 7l4-4 4 4M3 16h12'} /></svg>
                 {live.lifted?'Restore the hedge':'Lift the hedge'}
               </button>
@@ -74,11 +74,10 @@ function Machine({ data }: {data: CarryMachineProps & { titleId?: string }}) {
               </button>
             </div>
           </div>
-          <div className="cm-readout" data-readout=""><strong>{apr(data.carryApr)}</strong><span>a year · 30-day funding</span></div>
         </div>
       </div>
       <figcaption className="cm-caption" id={`${id}-caption`}>
-        <div className="cm-key"><span className="cm-funding-key"><i />Hourly funding</span><span id={`${id}-state`}>{live.lifted?'Hedge lifted':'Hedge in place'}</span><span>Motion illustrated · time accelerated</span></div>
+        <div className="cm-key"><span>Motion illustrated · time accelerated</span></div>
         <p>{caption}</p>
       </figcaption>
     </figure>

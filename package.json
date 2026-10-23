@@ -1,5 +1,5 @@
 {
-  "name": "strike-builder-reference",
+  "name": "seesaw",
   "version": "1.0.0",
   "description": "Reference React app for integrating with Strike Finance via Builder Codes API",
   "type": "module",
