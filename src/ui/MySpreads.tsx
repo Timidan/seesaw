@@ -16,7 +16,7 @@ export function MySpreads() {
   return (
     <section className="section" id="your-spreads" aria-labelledby="mine" style={{ paddingTop: 72 }}>
       <h2 id="mine">Your spreads</h2>
-      <p className="section-sub">Strike testnet, account {session.connection.accountId.slice(0, 8)}. Funding is read from your Strike funding history since each spread opened.</p>
+      <p className="section-sub">Testnet account {session.connection.accountId.slice(0, 8)}</p>
       <div style={{ marginTop: 22, display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
         {list.map((r) => <SpreadCard key={r.id} record={r} />)}
       </div>

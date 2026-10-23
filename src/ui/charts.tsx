@@ -34,8 +34,8 @@ export function RatioChart({ points, mean, upper, lower, label }: { points: { ti
     const s = chart.addLineSeries({ color: "#ebeff4", lineWidth: 2, priceLineVisible: false, lastValueVisible: true, priceFormat: { type: "price", precision: 5, minMove: 0.00001 } });
     s.setData(points.map((p) => ({ time: ts(p.time), value: p.value })));
     s.createPriceLine({ price: mean, color: "#878d94", lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30-day mean" });
-    s.createPriceLine({ price: upper, color: "#3a3f47", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: false, title: "+2σ" });
-    s.createPriceLine({ price: lower, color: "#3a3f47", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: false, title: "−2σ" });
+    s.createPriceLine({ price: upper, color: "#3a3f47", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: "+2σ" });
+    s.createPriceLine({ price: lower, color: "#3a3f47", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: "−2σ" });
   }, [points, mean, upper, lower]);
   return <div ref={ref} className="chart" role="img" aria-label={label} />;
 }

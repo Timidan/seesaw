@@ -1,0 +1,46 @@
+/* Wallet connect: header button, account menu, picker dialog. Tokens and .btn / .kv / .notice come from index.css. */
+
+.wb { position: relative; flex: none; display: flex; align-items: center; gap: 14px; }
+.wb .wb-btn { gap: 8px; white-space: nowrap; }
+.wb-ico { width: 20px; height: 20px; flex: none; object-fit: contain; }
+.wb-ico-fb { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--ink-0); color: var(--fg-2); font-size: 11px; font-weight: 700; }
+
+.wb-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 1;
+  width: min(300px, calc(100vw - 2 * var(--gutter))); padding: 16px;
+  background: var(--ink-1); border: 1px solid var(--rule-strong); border-radius: 3px;
+}
+.wb-addr { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wb-copy {
+  padding: 6px 0; border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--fg-2);
+  text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 4px;
+}
+.wb-copy:hover { color: var(--fg); text-decoration-color: var(--strike); }
+.wb-menu .kv { margin-top: 10px; }
+.wb-menu .btn { width: 100%; margin-top: 16px; }
+
+.wm {
+  margin: auto; padding: 0; width: min(400px, calc(100vw - 2 * var(--gutter))); max-height: calc(100dvh - 2 * var(--gutter)); overflow-y: auto;
+  background: var(--ink-1); color: var(--fg); border: 1px solid var(--rule-strong); border-radius: 3px;
+}
+.wm::backdrop { background: rgb(8 10 13 / 0.72); } /* taste-skill-ignore: scrim behind the dialog */
+body:has(.wm[open]) { overflow: hidden; }
+.wm-in { padding: 22px; }
+.wm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wm-x {
+  width: 40px; height: 40px; margin: -8px -10px -8px 0; border: 0; border-radius: 2px; background: none; cursor: pointer;
+  color: var(--fg-2); font-size: 24px; line-height: 1;
+}
+.wm-x:hover { color: var(--fg); background: var(--ink-2); }
+.wm-group { margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--fg-3); }
+.wm-list { margin-top: 8px; list-style: none; display: grid; gap: 8px; }
+.wm .wm-wallet { width: 100%; justify-content: flex-start; gap: 12px; font-weight: 600; }
+.wm .wm-wallet[aria-busy="true"]:disabled { opacity: 1; box-shadow: inset 0 0 0 2px var(--strike); }
+.wm-status { margin-top: 14px; font-size: 14px; color: var(--fg-2); }
+.wm-status:empty { display: none; }
+.wm-trust { margin-top: 18px; font-size: 13px; color: var(--fg-3); }
+
+/* wallet.css loads before index.css, so rules that override a .btn property use two classes.
+   Narrow header: the wallet button stays; the Strike mark goes before anything wraps (the nav is already hidden at 960). */
+@media (max-width: 520px) { .topbar .built-on { display: none; } header.topbar { gap: 12px; } }
+@media (max-width: 360px) { .topbar .brand-word { display: none; } }

@@ -12,28 +12,29 @@ const plain = (message: string, address: string) =>
     ? `${short(address)} owns the Seesaw builder code, and Strike does not let a builder trade through its own code. Switch to another address in your wallet and connect again.`
     : message;
 
-export type BuilderConnectHook = { wallets: WalletInfo[]; chain: SupportedChain; setChain: (chain: SupportedChain) => void; builderCode: string; setBuilderCode: (code: string) => void; status: string; error: string; connectingWalletId: string | null; connect: (walletId: string) => Promise<void> };
+export type BuilderConnectHook = { wallets: WalletInfo[]; refresh: () => void; status: string; error: string; connectingWalletId: string | null; connect: (walletId: string, chain: SupportedChain) => Promise<void> };
 
+/** Wallets from every chain, and the connect flow: wallet, one signature for Strike Builder Connect, then the session. */
 export function useBuilderConnect(): BuilderConnectHook {
   const { connectSession } = useSession();
-  const [wallets, setWallets] = useState<WalletInfo[]>([]), [chain, setChain] = useState<SupportedChain>("cardano");
-  const [builderCode, setBuilderCode] = useState(BUILDER_CODE), [status, setStatus] = useState(""), [error, setError] = useState("");
+  const [wallets, setWallets] = useState<WalletInfo[]>([]), [status, setStatus] = useState(""), [error, setError] = useState("");
   const [connectingWalletId, setConnectingWalletId] = useState<string | null>(null);
+  // Extensions inject late: look shortly after load, and again whenever the picker opens (refresh).
   useEffect(() => { const timer = setTimeout(() => setWallets(detectInstalledWallets()), 500); return () => clearTimeout(timer); }, []);
-  const connect = async (walletId: string) => {
-    if (!builderCode.trim()) { setError("Enter a builder code."); return; }
+  const refresh = () => { setWallets(detectInstalledWallets()); setError(""); };
+  const connect = async (walletId: string, chain: SupportedChain) => {
     setError(""); setConnectingWalletId(walletId);
     let address = "";
     try {
-      setStatus("Connecting to wallet...");
+      setStatus("Connecting to your wallet…");
       const wallet = await connectWallet(chain, walletId, true);
       address = wallet.address;
       const keys = generateApiWalletKeys();
-      setStatus("Requesting challenge...");
-      const challenge = await requestSignature({ address: wallet.address, chain, publicKey: keys.publicKey, builderCode: builderCode.trim(), feeShareBps: BUILDER_FEE_BPS });
+      setStatus("Preparing the message…");
+      const challenge = await requestSignature({ address: wallet.address, chain, publicKey: keys.publicKey, builderCode: BUILDER_CODE, feeShareBps: BUILDER_FEE_BPS });
       setStatus(`Sign the message in your wallet with ${short(wallet.address)}…`);
       const signature = await signMessage(wallet, challenge.message_to_sign);
-      setStatus("Verifying...");
+      setStatus("Verifying…");
       const result = await verifySignature({ nonce: challenge.nonce, walletSignature: signature });
       storeApiWalletKeys(keys);
       connectSession({ result, wallet, accountId: result.account_id, chain, address: wallet.address, builderCode: result.builder_code, feeShareBps: result.fee_share_bps });
@@ -41,5 +42,5 @@ export function useBuilderConnect(): BuilderConnectHook {
     } catch (cause) { setError(cause instanceof Error ? plain(cause.message, address) : "Connection failed"); setStatus(""); }
     finally { setConnectingWalletId(null); }
   };
-  return { wallets: wallets.filter((wallet) => wallet.chain === chain), chain, setChain, builderCode, setBuilderCode, status, error, connectingWalletId, connect };
+  return { wallets, refresh, status, error, connectingWalletId, connect };
 }

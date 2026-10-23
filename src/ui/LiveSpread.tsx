@@ -20,7 +20,7 @@ export function LiveSpread() {
         <div className="section-head">
           <div>
             <h2 id="live-title" className="display">Live right now</h2>
-            <p className="section-sub">One real spread on Strike testnet, opened with Seesaw. Read from Strike's public API every 15 seconds.</p>
+            <p className="section-sub">One real spread on Strike testnet.</p>
           </div>
           <a className="link" href={proof} target="_blank" rel="noreferrer">Check it on Strike's API ↗</a>
         </div>

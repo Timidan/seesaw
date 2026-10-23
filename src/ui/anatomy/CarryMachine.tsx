@@ -63,7 +63,7 @@ function Machine({ data }: {data: CarryMachineProps & { titleId?: string }}) {
         </button>
         <div className="cm-bottom">
           <div className="cm-controls">
-            <span id={`${id}-hint`} className="cm-hint">Press or drag the beam <span>· Space works too</span></span>
+            <span id={`${id}-hint`} className="cm-hint">Press the beam</span>
             <div className="cm-buttons">
               <button type="button" className="cm-toggle" onClick={live.toggle}>
                 <svg viewBox="0 0 18 18" aria-hidden="true"><path d={live.lifted?'M9 3v11m-4-4 4 4 4-4M3 16h12':'M9 14V3M5 7l4-4 4 4M3 16h12'} /></svg>
@@ -76,10 +76,7 @@ function Machine({ data }: {data: CarryMachineProps & { titleId?: string }}) {
           </div>
         </div>
       </div>
-      <figcaption className="cm-caption" id={`${id}-caption`}>
-        <div className="cm-key"><span>Motion illustrated · time accelerated</span></div>
-        <p>{caption}</p>
-      </figcaption>
+      <figcaption className="cm-sr-only" id={`${id}-caption`}>{caption} Motion is illustrated and time is accelerated.</figcaption>
     </figure>
     <span className="cm-sr-only" aria-live="polite" aria-atomic="true">{live.announcement}</span>
   </div>;

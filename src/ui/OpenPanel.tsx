@@ -1,24 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BUILDER_FEE_BPS } from "../api/config";
-import { detectInstalledWallets, type SupportedChain } from "../api/wallets";
 import type { ExchangeSymbol } from "../carry/data";
 import { isTradable } from "../carry/execMarkets";
 import { DEFAULT_FEE_RATES } from "../math/fees";
 import { useSession } from "../session/SessionProvider";
-import { useBuilderConnect } from "../session/useBuilderConnect";
 import type { SpreadSide } from "../spread/plan";
 import type { SpreadRecord } from "../spread/store";
 import { useSpreadsCtx } from "./spreadsContext";
 import { Beam } from "./bits";
 import { DepositInline } from "./DepositInline";
+import { openWalletModal } from "./WalletButton";
 import { Coin } from "./Coin";
 import { useExecMarkets, useExecMarks, useSnapshot } from "./data";
 import { base, pct, shortId, usd } from "./format";
 import { reducedMotion, strike } from "./storm";
-
-const CHAINS: { id: SupportedChain; label: string }[] = [
-  { id: "ethereum", label: "Ethereum" }, { id: "solana", label: "Solana" }, { id: "cardano", label: "Cardano" },
-];
 
 export function OpenPanel({ short, long }: { short: string; long: string }) {
   const session = useSession();
@@ -29,7 +24,6 @@ export function OpenPanel({ short, long }: { short: string; long: string }) {
   return (
     <div className="panel open">
       <h2 className="h-sec">Open this spread</h2>
-      <p className="sub">Both legs go to Strike testnet in one signed request, with Seesaw's builder code.</p>
       {markets === null ? <div className="skel" style={{ height: 120, marginTop: 18 }} />
         : !tradable ? <NotOnTestnet markets={markets} short={short} long={long} />
         : !session.connection ? <Connect />
@@ -67,32 +61,7 @@ function NotOnTestnet({ markets, short, long }: { markets: ExchangeSymbol[]; sho
 }
 
 function Connect() {
-  const c = useBuilderConnect();
-  // Start on a chain where this browser actually has a wallet.
-  useEffect(() => {
-    const found = detectInstalledWallets().find((w) => w.installed);
-    if (found && found.chain !== c.chain) c.setChain(found.chain);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return (
-    <>
-      <div className="seg" role="group" aria-label="Wallet chain" style={{ marginTop: 18 }}>
-        {CHAINS.map((ch) => <button key={ch.id} type="button" aria-pressed={c.chain === ch.id} onClick={() => c.setChain(ch.id)}>{ch.label}</button>)}
-      </div>
-      <div className="legs">
-        {c.wallets.length === 0 && <p className="notice">No {c.chain[0].toUpperCase() + c.chain.slice(1)} wallet found in this browser. Install one, or pick another chain.</p>}
-        {c.wallets.map((w) => (
-          <button key={w.id} type="button" className="btn btn-line" style={{ marginTop: 0, width: "100%", justifyContent: "flex-start" }}
-            disabled={!!c.connectingWalletId} onClick={() => c.connect(w.id)}>
-            {w.icon && <img src={w.icon} alt="" width={20} height={20} />} {c.connectingWalletId === w.id ? "Waiting for your wallet…" : `Connect ${w.name}`}
-          </button>
-        ))}
-      </div>
-      {c.status && <p className="sub" aria-live="polite" style={{ marginTop: 12 }}>{c.status}</p>}
-      {c.error && <p className="notice err" role="alert"><b>Could not connect.</b> {c.error}</p>}
-      <p className="sub" style={{ marginTop: 14 }}>You sign one message. It lets Seesaw place orders for this account with builder code <span className="mono">{c.builderCode}</span>. It cannot withdraw.</p>
-    </>
-  );
+  return <button type="button" className="btn btn-strike" onClick={openWalletModal}>Connect wallet</button>;
 }
 
 function Ticket({ short, long, markets }: { short: string; long: string; markets: ExchangeSymbol[] }) {
@@ -161,7 +130,6 @@ function Ticket({ short, long, markets }: { short: string; long: string; markets
   return (
     <>
       <dl className="kv">
-        <div><dt>Wallet</dt><dd className="mono">{shortId(conn.address)} <button type="button" className="link" style={{ background: "none", border: 0, cursor: "pointer", marginLeft: 6 }} onClick={session.disconnect}>Disconnect</button></dd></div>
         <div><dt>Available on Strike testnet</dt><dd>{usd(Number(session.account?.available_balance ?? 0))}</dd></div>
       </dl>
       <div className="field">
@@ -239,7 +207,7 @@ export function LegBoard({ record }: { record: SpreadRecord }) {
         })}
       </div>
       {status === "open" && (
-        <p className="notice" style={{ display: "flex", alignItems: "center", gap: 12 }}><Beam z={0} size={34} /> <span><b style={{ color: "var(--strike)" }}>Both legs filled.</b> The spread is open; funding settles every hour on Strike.</span></p>
+        <p className="notice" style={{ display: "flex", alignItems: "center", gap: 12 }}><Beam z={0} size={34} /> <span><b style={{ color: "var(--strike)" }}>Both legs filled.</b> Funding settles every hour on Strike.</span></p>
       )}
       {status === "one_leg" && failedLeg && (
         <div className="notice err" role="alert">

@@ -3,6 +3,7 @@ import { Home } from "./ui/Home";
 import { SpreadPage } from "./ui/SpreadPage";
 import { Mark } from "./ui/bits";
 import { StrikeMark } from "./ui/Coin";
+import { WalletButton } from "./ui/WalletButton";
 import { base } from "./ui/format";
 
 type Route = { page: "home" } | { page: "spread"; short: string; long: string };
@@ -41,7 +42,7 @@ export default function App() {
         </nav>
         <div className="topbar-right">
           <a className="built-on" href="https://strikefinance.org" target="_blank" rel="noreferrer"><span>Built on</span> <StrikeMark height={14} /></a>
-          <span className="net-chip" title="Orders go to Strike testnet. Rankings use Strike mainnet data."><i aria-hidden /> <span className="long">Orders: Strike testnet</span><span className="short">Testnet</span></span>
+          <WalletButton />
         </div>
       </header>
       <div id="content" tabIndex={-1} style={{ outline: "none" }}>{route.page === "home" ? <Home /> : <SpreadPage short={route.short} long={route.long} />}</div>

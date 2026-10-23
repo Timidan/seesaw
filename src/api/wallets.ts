@@ -136,6 +136,18 @@ export function detectInstalledWallets(): WalletInfo[] {
     }
   }
 
+  // EVM and Solana wallets carry no icon on window; most announce one through EIP-6963 (answered synchronously).
+  const icons: Record<string, string> = {};
+  const onAnnounce = (e: Event) => { const info = (e as CustomEvent).detail?.info; if (info?.name && info?.icon) icons[info.name.toLowerCase()] = info.icon; };
+  window.addEventListener("eip6963:announceProvider", onAnnounce);
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  window.removeEventListener("eip6963:announceProvider", onAnnounce);
+  for (const w of wallets) {
+    if (w.icon) continue;
+    const key = w.name.toLowerCase().split(" ")[0];
+    w.icon = Object.entries(icons).find(([name]) => name.startsWith(key))?.[1];
+  }
+
   return wallets;
 }
 

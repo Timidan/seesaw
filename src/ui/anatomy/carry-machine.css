@@ -37,7 +37,6 @@
 .iso.cm .cm-counter text { fill:#d2d9e3; font-family:var(--font-ui, inherit); }
 .iso.cm .cm-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; padding:0 25px 23px; }
 .iso.cm .cm-hint { display:block; color:var(--anatomy-text); font-size:14px; line-height:1.5; margin-bottom:12px; }
-.iso.cm .cm-hint span { opacity:.7; }
 .iso.cm .cm-buttons { display:flex; gap:8px; }
 .iso.cm .cm-toggle, .iso.cm .cm-pause { appearance:none; display:inline-flex; align-items:center; justify-content:center; gap:9px; height:40px; color:var(--cm-ink); font:inherit; font-size:14px; font-weight:600; background:#1b1e23; border:0; border-radius:2px; padding:0 14px; cursor:pointer; transition:background-color 160ms cubic-bezier(0.16,1,0.3,1), transform 160ms cubic-bezier(0.16,1,0.3,1); }
 .iso.cm .cm-toggle:hover,.iso.cm .cm-pause:hover { background:#3a3f47; }
@@ -46,21 +45,13 @@
 .iso.cm .cm-toggle svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.2; stroke-linecap:round; stroke-linejoin:round; }
 .iso.cm .cm-pause { width:40px; padding:0; }
 .iso.cm .cm-pause svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.3; }
-.iso.cm .cm-caption { color:var(--anatomy-text); font-size:14px; line-height:1.6; }
-.iso.cm .cm-caption p { margin:10px 0 0; }
-.iso.cm .cm-key { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:14px; font-size:13px; }
-.iso.cm .cm-key>span:last-child { margin-left:auto; opacity:.75; }
 .iso.cm .cm-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .iso.cm-unavailable { padding:24px; color:#afb7c2; background:#080a0d; border:1px solid #29313b; font-size:13px; }
 @media(max-width:560px) {
   .iso.cm .cm-stage { width:140%; margin:5px -20% 4px; }
   .iso.cm .cm-bottom { padding:0 16px 17px; gap:10px; }
   .iso.cm .cm-hint { font-size:13px; margin-bottom:10px; }
-  .iso.cm .cm-hint span { display:none; }
   .iso.cm .cm-toggle { height:40px; font-size:13px; padding:0 10px; gap:6px; }
-  .iso.cm .cm-key { column-gap:12px; font-size:13px; }
-  .iso.cm .cm-key>span:last-child { width:100%; margin-left:0; }
-  .iso.cm .cm-caption { font-size:14px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .iso.cm *, .iso.cm *::before, .iso.cm *::after { animation:none!important; transition:none!important; }

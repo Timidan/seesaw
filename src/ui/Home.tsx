@@ -28,7 +28,7 @@ export function Home() {
 
   return (
     <main>
-      <Hero hero={hero} total={pairs.filter((p) => p.carryApr > 0).length} asOf={snap.data?.asOf ?? null} error={snap.error} />
+      <Hero hero={hero} asOf={snap.data?.asOf ?? null} error={snap.error} />
       {hero && heroSym && <How hero={hero} hours={heroSym.hours} paid={Math.round(heroSym.pctPositive * heroSym.hours)} />}
       <LiveSpread />
       <Board pairs={pairs} exec={exec} loading={!snap.data && !snap.error} bins={bins} />
@@ -36,7 +36,7 @@ export function Home() {
   );
 }
 
-function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: string | null; error?: string }) {
+function Hero({ hero, asOf, error }: { hero?: Pair; asOf: string | null; error?: string }) {
   const funding = useFunding(hero?.short ?? null);
   const [count, setCount] = useState({ received: 0, printed: 0 });
   const [landed, setLanded] = useState(false);
@@ -57,7 +57,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-field"><StormField src="/footage/storm-47947-720.mp4" poster="/footage/storm-47947-poster.jpg" /></div>
       <div className="hero-scrim" />
-      <SceneOverlay shortLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={16} /> short {short} · collects</>} longLabel={<><Coin sym={hero?.long ?? "SOL-USD"} size={16} /> long {long} · hedge</>} />
+      <SceneOverlay shortLabel={<><Coin sym={hero?.short ?? "ADA-USD"} size={16} /> short {short}</>} longLabel={<><Coin sym={hero?.long ?? "SOL-USD"} size={16} /> long {long}</>} />
       <div className="hero-body">
         <div className="wrap">
           <div className="hero-copy">
@@ -73,11 +73,8 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
                 <p className="figure-label"><b>a year, short {short} / long {long}</b>30-day funding, hedged</p>
               </div>
             )}
-            <div className="hero-actions" style={{ opacity: hero ? 1 : 0.4 }}>
-              <a className="btn btn-strike" href={hero ? `#/spread/${hero.short}/${hero.long}` : "#board"}>
-                Open this spread <span className="arrow" aria-hidden>→</span>
-              </a>
-              <a className="link" href="#board">All {total || ""} spreads</a>
+            <div className="hero-actions">
+              <a className="btn btn-strike" href="#board">Open app</a>
             </div>
           </div>
         </div>
@@ -85,7 +82,7 @@ function Hero({ hero, total, asOf, error }: { hero?: Pair; total: number; asOf: 
       <PauseMotion />
       <div className="hero-tape wrap">
         <div className="tape-head">
-          <p className="tape-title"><b>{short} funding</b> · one tick per hour</p>
+          <p className="tape-title"><b>{short} funding</b></p>
           <p className="tape-count num"><span className="hit">{count.received}</span> / {count.printed || hours} hours paid to shorts</p>
         </div>
         {funding.data
@@ -105,8 +102,7 @@ function How({ hero, hours, paid }: { hero: Pair; hours: number; paid: number })
       <div className="wrap how-grid">
         <div>
           <h2 id="how-title" className="display">Let the crowd pay</h2>
-          <p className="section-sub">Press the beam. With the hedge on, it barely moves. Lift the hedge and press again.</p>
-          <p className="section-sub"><a className="link" href="/story.html">New to this? Take the one-minute tour</a></p>
+          <p className="section-sub"><a className="link" href="/story.html">Take the tour</a></p>
         </div>
         <CarryMachine titleId="how-title" short={base(hero.short)} long={base(hero.long)} beta={hero.beta} carryApr={hero.betaCarryApr}
           hoursPaid={paid} hours={hours} corr={hero.corr} hedgedVolApr={hero.hedgedVolApr} dollarVolApr={hero.dollarVolApr} />
@@ -153,11 +149,10 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
         <div className="section-head">
           <div>
             <h2 id="board-title" className="display">The board</h2>
-            <p className="section-sub">Every Strike pair, ranked by the funding it paid per unit of risk over 30 days.</p>
           </div>
           <div className="board-controls" role="group" aria-label="Filters">
-            <button type="button" className="toggle" aria-pressed={hedged} onClick={() => setHedged((v) => !v)}>Only pairs that move together</button>
-            <button type="button" className="toggle" aria-pressed={testnet} onClick={() => setTestnet((v) => !v)}>Only testnet pairs</button>
+            <button type="button" className="toggle" aria-pressed={hedged} onClick={() => setHedged((v) => !v)}>Move together</button>
+            <button type="button" className="toggle" aria-pressed={testnet} onClick={() => setTestnet((v) => !v)}>Testnet</button>
           </div>
         </div>
         <div className="board-scroll">
@@ -165,7 +160,7 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
             <thead>
               <tr>
                 <th scope="col">Spread</th>
-                <th scope="col" className="hide-sm">30 days, net funding</th>
+                <th scope="col" className="hide-sm">30 days</th>
                 {head("betaCarryApr", "A year")}
                 {head("carryToRisk", "Per unit of risk")}
                 {head("ewmaCarryApr", "Paying now", "hide-md")}
@@ -196,13 +191,13 @@ function Board({ pairs, exec, loading, bins }: { pairs: Pair[]; exec: ExchangeSy
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={7} className="empty">Nothing matches. Only a few Strike testnet markets can be opened and closed right now; turn off "Only testnet pairs" to see every market.</td></tr>
+                <tr><td colSpan={7} className="empty">Nothing matches. Only a few markets can be opened on Strike testnet; turn off Testnet to see them all.</td></tr>
               )}
             </tbody>
           </table>
         </div>
         <div className="board-more">
-          <span className="num">{Math.min(limit, rows.length)} of {rows.length} {rows.length === 1 ? "pair" : "pairs"}{hedged ? " that move together" : ""}</span>
+          <span className="num">{Math.min(limit, rows.length)} of {rows.length}</span>
           {rows.length > limit && <button type="button" className="btn btn-line btn-sm" onClick={() => setLimit(rows.length)}>Show all {rows.length}</button>}
         </div>
       </div>

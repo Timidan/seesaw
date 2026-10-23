@@ -50,20 +50,19 @@ export function Xray({ short, long, shortApr, longApr, correlation, beta, ps, pl
         <text x="532" y="92" className="xray-v" textAnchor="end" fill={flow(longApr)}>{fmt(longApr)}</text>
         {/* the total */}
         <text x="320" y="84" textAnchor="middle" className="xray-total">{fmt(total)}</text>
-        <text x="320" y="106" textAnchor="middle" className="xray-k">a year, both legs</text>
+        <text x="320" y="106" textAnchor="middle" className="xray-k">a year</text>
         {/* beam, weights, pivot */}
         <rect x="80" y="196" width="480" height="10" className="xray-beam" />
         <rect x="112" y="150" width="76" height="46" className="xray-w hot" />
         <rect x={490 - hw / 2} y={196 - 46 * Math.sqrt(b)} width={hw} height={46 * Math.sqrt(b)} className="xray-w" />
-        <text x="150" y="178" textAnchor="middle" className="xray-wl">short {S}</text>
-        <text x="490" y="182" textAnchor="middle" className="xray-wl dark">long {L}</text>
+        <text x="150" y="178" textAnchor="middle" className="xray-wl">{S}</text>
+        <text x="490" y="182" textAnchor="middle" className="xray-wl dark">{L}</text>
         {b !== 1 && <text x={490 + hw / 2 + 8} y={196 - 23 * Math.sqrt(b) + 4} className="xray-k">×{b.toFixed(2)}</text>}
         <path d="M320,206 L304,236 H336 Z" className="xray-beam" />
         {/* price paths that cancel */}
         <path d={line(vs)} className="xray-price" stroke="var(--mark-gold)" />
         <path d={line(vl)} className="xray-price" stroke="var(--fg-2)" strokeDasharray="3 3" />
-        <text x="80" y="312" className="xray-k xray-cap">{S} and {L} price, 30 days</text>
-        <text x="560" y="312" textAnchor="end" className="xray-k xray-cap">moved together · {corr(correlation)}</text>
+        <text x="560" y="312" textAnchor="end" className="xray-k xray-cap">Moved together · {corr(correlation)}</text>
       </svg>
     </figure>
   );
